@@ -6,9 +6,12 @@ Build js code:
 Use:
     Load scripts [utils.js, templates.js]
     Or `cat templates.js utils.js > res.js` and paste it into chrome console
+    console.log(JSON.stringify(window.templates_pool.info())); # pool is empty
     var t = window.templates_pool.get("ss"); # Load empty ss template
-    console.log(t[0]);
+    console.log(JSON.stringify(window.templates_pool.info())); # pool has one busy ss item 
+    console.log(t[0]); # Look as dom
     t[1].A("FiRsT");
     console.log(t[0]);
     t[1].B([{C: 1, E: "Yahhhoo!"},{C: 2, E: "MMMM",D: [1,1,1,9]}]);
+    console.log(JSON.stringify(window.templates_pool.info())); # more busy templates
     console.log(t[0]);

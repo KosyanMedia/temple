@@ -1,6 +1,6 @@
 function render_template(before, after, template, data, pool) {
     var parent = before.parentNode;
-    while(before.nextSibling != after) {
+    while(before.nextSibling != after) {//Loosing memory here
         parent.removeChild(before.nextSibling);
     }
     var fragment = document.createDocumentFragment();
