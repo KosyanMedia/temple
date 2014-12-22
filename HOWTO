@@ -14,4 +14,6 @@ Use:
     console.log(t[0]);
     t[1].B([{C: 1, E: "Yahhhoo!"},{C: 2, E: "MMMM",D: [1,1,1,9]}]);
     console.log(JSON.stringify(window.templates_pool.info())); # more busy templates
+    window.templates_pool.build_cache({"ss": 100}); # build 100 elements cache for ss template
+    console.log(JSON.stringify(window.templates_pool.info())); # fresh new 100 ss items ready for action 
     console.log(t[0]);
