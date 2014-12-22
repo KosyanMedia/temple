@@ -1,0 +1,7 @@
+<div id="ass">
+ <b>{{A}}</b>
+ <forall key="B">
+   <b class="{{E}}">{{C}}</b>
+   <forall key="D"><li>+</li></forall>
+ </forall>
+</div>

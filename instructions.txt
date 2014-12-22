@@ -1,0 +1,40 @@
+Following instructions are used as intermediate representation of dom creation process.
+
+0) Instruction name
+1) Source template
+2-4) Instruction arguments
+
+attr input node0 id [ 'C', 'z' ]
+attr input node0 class [ 'C', 'value' ]
+text input node0 [ 'C', 'test ' ] undefined
+text input node0 [ 'V', 'M' ] undefined
+text input node0 [ 'C', ' ' ] undefined
+text input node0 [ 'V', 'F' ] undefined
+text input node0 [ 'C', ' ' ] undefined
+forall input node0 A input_nested1
+node input_nested1 span node2 undefined
+link input_nested1 root node2 undefined
+attr input_nested1 node2 class [ 'C', 'd' ]
+text input_nested1 node2 [ 'V', 'Y' ] undefined
+text input_nested1 root [ 'C', ' ' ] undefined
+node input_nested1 b node3 undefined
+link input_nested1 root node3 undefined
+text input_nested1 node3 [ 'C', 'test' ] undefined
+node input b node4 undefined
+link input node0 node4 undefined
+attr input node4 at [ 'V', 'atva' ]
+text input node4 [ 'C', 'text_bold' ] undefined
+node input div node5 undefined
+link input node0 node5 undefined
+attr input node5 class [ 'C', '11' ]
+attr input node5 id [ 'C', 'ice' ]
+text input node5 [ 'C', ' ' ] undefined
+text input node0 [ 'C', ' ' ] undefined
+node input span node6 undefined
+link input node0 node6 undefined
+attr input node6 class [ 'C', 'a b c' ]
+attr input node6 id [ 'C', 'spa' ]
+text input node6 [ 'C', '"|' ] undefined
+text input node6 [ 'V', 'X' ] undefined
+text input node6 [ 'C', '|"' ] undefined
+text input node0 [ 'C', ' end' ] undefined
