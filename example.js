@@ -1,2 +1,2 @@
 var temple = require('./priest');
-console.log(temple(['examples/ss.temple', 'examples/s.temple']));
+console.log(temple(process.argv.slice(2)));
