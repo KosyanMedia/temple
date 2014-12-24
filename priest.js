@@ -134,7 +134,7 @@
             var variable = split_var(ins[2][1]);
             declarations.push('var ' + variable[0] + '_text = document.createTextNode("");');
             links.push(ins[1] + '_node.appendChild(' + variable[0] + '_text);');
-            accessors.push(variable[0] + ': function(value){if(value){' + variable[0] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + '); } else {return ' + variable[0] + '_node.nodeValue;}}');
+            accessors.push(variable[0] + ': function(value){if(value){' + variable[0] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + '); } else {return ' + variable[0] + '_text.nodeValue;}}');
           } else if(ins[2][0] == 'C') {
             links.push(ins[1] + '_node.appendChild(document.createTextNode("' + esc(ins[2][1]) + '"));');
           }
