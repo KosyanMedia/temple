@@ -150,7 +150,8 @@
     }
     output += '(function(window){\n';
     output += 'var templates_list = {\n    ' + templates_code.join(',\n    ') + '\n};';
-    output += 'window.templates_list = temple_utils.pool(templates_list);\n';
+    output += 'window.templates_list = window.templates_list || {};\n';
+    output += 'window.templates_list.' + Object.keys(templates)[0] + ' = temple_utils.pool(templates_list);\n';
     output += '})(window);\n';
 
     return output;
