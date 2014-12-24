@@ -125,7 +125,7 @@
           declarations.push('var after_' + ins[3] + ' = document.createTextNode("");');
           links.push(ins[1] + '_node.appendChild(before_' + ins[3] + ');');
           links.push(ins[1] + '_node.appendChild(after_' + ins[3] + ');');
-          accessors.push(ins[2] + ': ' + 'function(value){render_template(before_' + ins[3] + ', after_' + ins[3] + ', "' + ins[3] + '", value, pool);}');
+          accessors.push(ins[2] + ': ' + 'function(value){temple_utils.render_template(before_' + ins[3] + ', after_' + ins[3] + ', "' + ins[3] + '", value, pool);}');
         }
       }
       var accessors_code = '{' + accessors.join(', ')+ '}';
