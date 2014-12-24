@@ -90,6 +90,22 @@
       }
     }
 
+    function split_var(v) {
+      var dot = v.indexOf('.');
+      var bra = v.indexOf('[');
+      var tor = [v,''];
+      if(dot != -1 || bra != -1) {
+        if(dot == - 1)
+          dot = 1000;
+        if(bra == - 1)
+          bra = 1000;
+        var ind = Math.min(dot, bra);
+        tor[0] = v.substr(0, ind);
+        tor[1] = v.substr(ind);
+      }
+      return tor;
+    }
+
     function builder(instructions) {//Single-pass translator
       function esc(s) {
         return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
@@ -102,17 +118,19 @@
         var ins = instructions[i];
         if(ins[0] == 'attr') {
           if(ins[3][0] == 'V') {
-            declarations.push('var ' + ins[3][1] + '_attr = document.createAttribute("' + ins[2] + '");');
-            links.unshift(ins[1] + '_node.setAttributeNode(' + ins[3][1] + '_attr);');
-            accessors.push(ins[3][1] + ': function(value){if(value){' + ins[3][1] + '_attr.value = value; } else {return ' + ins[3][1] + '_attr.value;}}');
+            var variable = split_var(ins[3][1]);
+            declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + ins[2] + '");');
+            links.unshift(ins[1] + '_node.setAttributeNode(' + variable[0] + '_attr);');
+            accessors.push(variable[0] + ': function(value){if(value){' + variable[0] + '_attr.value = value' + variable[1] + '; } else {return ' + variable[0] + '_attr.value;}}');
           } else if(ins[3][0] == 'C') {
             links.unshift(ins[1] + '_node.setAttribute("' + ins[2] + '", "' + esc(ins[3][1]) + '");');
           }
         } else if(ins[0] == 'text') {
           if(ins[2][0] == 'V') {
-            declarations.push('var ' + ins[2][1] + '_text = document.createTextNode("");');
-            links.push(ins[1] + '_node.appendChild(' + ins[2][1] + '_text);');
-            accessors.push(ins[2][1] + ': function(value){if(value){' + ins[2][1] + '_text.nodeValue = value; } else {return ' + ins[2][1] + '_node.nodeValue;}}');
+            var variable = split_var(ins[2][1]);
+            declarations.push('var ' + variable[0] + '_text = document.createTextNode("");');
+            links.push(ins[1] + '_node.appendChild(' + variable[0] + '_text);');
+            accessors.push(variable[0] + ': function(value){if(value){' + variable[0] + '_text.nodeValue = value' + variable[1] + '; } else {return ' + variable[0] + '_node.nodeValue;}}');
           } else if(ins[2][0] == 'C') {
             links.push(ins[1] + '_node.appendChild(document.createTextNode("' + esc(ins[2][1]) + '"));');
           }
