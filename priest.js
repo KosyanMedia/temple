@@ -107,7 +107,6 @@
         tor[0] = v.substr(0, ind);
         tor[1] = v.substr(ind);
       }
-      console.log(v);
       return tor;
     }
 
