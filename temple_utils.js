@@ -1,4 +1,11 @@
 (function(window){
+  var set_all = function(tpl, data, pool) {
+    for(var k in data) {
+      if(tpl.hasOwnProperty(k)) {
+        tpl[k](data[k]);
+      }
+    }
+  };
 
   var render_template = function(before, after, template, data, pool){
     var parent = before.parentNode;
@@ -10,11 +17,7 @@
       var nested = pool.get(template);
       fragment.appendChild(nested[0]);
       var d = data[i];
-      for(var k in d) {
-        if(nested[1].hasOwnProperty(k)) {
-          nested[1][k](d[k]);
-        }
-      }
+      set_all(nested[1], d, pool);
     }
     parent.insertBefore(fragment, after);
   };
@@ -83,7 +86,8 @@
 
   window.temple_utils = {
     render_template: render_template,
-    pool: pool
+    pool: pool,
+    set_all: set_all
   };
 
 })(window);

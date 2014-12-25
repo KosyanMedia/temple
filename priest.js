@@ -151,6 +151,7 @@
           accessors.push(ins[2] + ': ' + 'function(value){temple_utils.render_template(before_' + ins[3] + ', after_' + ins[3] + ', "' + ins[3] + '", value, pool);}');
         }
       }
+      accessors.push('update: function(value){temple_utils.set_all(this, value, pool);}');
       var accessors_code = '{' + accessors.join(', ')+ '}';
       links.push('return [root_node, ' + accessors_code + '];');
       return declarations.join('\n') + '\n' + links.join('\n');
