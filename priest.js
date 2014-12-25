@@ -91,10 +91,10 @@
 
     function split_var(v) {
       var pipe = v.indexOf('|');
-      var tor = [v,'', ''];
+      var tor = [v, '', ''];
       if(pipe != -1) {
-        tor[2] = v.substr(0, pipe);
-        v = v.substr(pipe + 1);
+        tor[2] = 'filters.' + v.substr(pipe + 1);
+        v = v.substr(0, pipe);
       }
       var dot = v.indexOf('.');
       var bra = v.indexOf('[');
