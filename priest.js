@@ -93,8 +93,9 @@
       var pipe = v.indexOf('|');
       var tor = [v, '', ''];
       if(pipe != -1) {
-        tor[2] = 'filters.' + v.substr(pipe + 1);
-        v = v.substr(0, pipe);
+        tor[2] = 'filters.' + v.substr(pipe + 1).replace(/^\s+|\s+$/g, '');
+        v = v.substr(0, pipe).replace(/^\s+|\s+$/g, '');
+        tor[0] = v;
       }
       var dot = v.indexOf('.');
       var bra = v.indexOf('[');
