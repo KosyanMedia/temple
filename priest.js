@@ -126,7 +126,7 @@
             var variable = split_var(ins[3][1]);
             declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + ins[2] + '");');
             links.unshift(ins[1] + '_node.setAttributeNode(' + variable[0] + '_attr);');
-            accessors.push(variable[0] + ': function(value){if(value){' + variable[0] + '_attr.value = ' + variable[2] + '(value' + variable[1] + '); } else {return ' + variable[0] + '_attr.value;}}');
+            accessors.push(variable[0] + ': function(value){' + variable[0] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ');}');
           } else if(ins[3][0] == 'C') {
             links.unshift(ins[1] + '_node.setAttribute("' + ins[2] + '", "' + esc(ins[3][1]) + '");');
           }
@@ -135,7 +135,7 @@
             var variable = split_var(ins[2][1]);
             declarations.push('var ' + variable[0] + '_text = document.createTextNode("");');
             links.push(ins[1] + '_node.appendChild(' + variable[0] + '_text);');
-            accessors.push(variable[0] + ': function(value){if(value){' + variable[0] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + '); } else {return ' + variable[0] + '_text.nodeValue;}}');
+            accessors.push(variable[0] + ': function(value){' + variable[0] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ');}');
           } else if(ins[2][0] == 'C') {
             links.push(ins[1] + '_node.appendChild(document.createTextNode("' + esc(ins[2][1]) + '"));');
           }
