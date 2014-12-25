@@ -90,6 +90,7 @@
     }
 
     function split_var(v) {
+      var v = v.replace(/^\s+|\s+$/g, '');
       var pipe = v.indexOf('|');
       var tor = [v, '', ''];
       if(pipe != -1) {
