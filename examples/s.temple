@@ -1,1 +1,3 @@
-<div>Z</div>
+<div class="test">
+  <div class="foobar"></div>
+</div>
