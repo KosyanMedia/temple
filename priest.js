@@ -92,10 +92,10 @@
     function split_var(v) {
       var v = v.replace(/^\s+|\s+$/g, '');
       var pipe = v.indexOf('|');
-      var tor = [v, '', ''];
+      var tor = [v.replace(/\.|\[|\]/g, '_'), '', ''];
       if(pipe != -1) {
         tor[2] = 'filters.' + v.substr(pipe + 1).replace(/^\s+|\s+$/g, '');
-        v = v.substr(0, pipe).replace(/^\s+|\s+$/g, '');
+        v = v.substr(0, pipe).replace(/\.|\[|\]/g, '_').replace(/^\s+|\s+$/g, '');
         tor[0] = v;
       }
       var dot = v.indexOf('.');
@@ -106,7 +106,6 @@
         if(bra == - 1)
           bra = 1000;
         var ind = Math.min(dot, bra);
-        tor[0] = v.substr(0, ind);
         tor[1] = v.substr(ind);
       }
       return tor;
