@@ -117,39 +117,57 @@
         return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
       }
 
-      var declarations = ['var root_node = document.createDocumentFragment();'];
-      var links = [];//Order is important here
-      var accessors = [];
+      var declarations = ['var root_node = document.createDocumentFragment();'],
+          links = [], // Order is important here
+          accessors = [];
+
       for(var i = 0, l = instructions.length; i < l; i++) {
-        var ins = instructions[i];
-        if(ins[0] == 'attr') {
-          if(ins[3][0] == 'V') {
-            var variable = split_var(ins[3][1]);
-            declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + ins[2] + '");');
-            links.unshift(ins[1] + '_node.setAttributeNode(' + variable[0] + '_attr);');
+        var ins = instructions[i],
+            instruction = ins[0],
+            template = ins[1];
+
+        if(instruction == 'attr') {
+          var attr = ins[2],
+              value_type = ins[3][0], // Variable or Constant
+              value = ins[3][1];
+
+          if(value_type == 'V') { // Variable
+            var variable = split_var(value);
+            declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + attr + '");');
+            links.unshift(template + '_node.setAttributeNode(' + variable[0] + '_attr);');
             accessors.push(variable[0] + ': function(value){' + variable[0] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ');}');
-          } else if(ins[3][0] == 'C') {
-            links.unshift(ins[1] + '_node.setAttribute("' + ins[2] + '", "' + esc(ins[3][1]) + '");');
+          } else if(value_type == 'C') { // Constant
+            links.unshift(template + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
           }
-        } else if(ins[0] == 'text') {
-          if(ins[2][0] == 'V') {
-            var variable = split_var(ins[2][1]);
+        } else if(instruction == 'text') {
+          var value_type = ins[2][0], // Variable or Constant
+              value = ins[2][1];
+
+          if(value_type == 'V') { // Variable
+            var variable = split_var(value);
             declarations.push('var ' + variable[0] + '_text = document.createTextNode("");');
-            links.push(ins[1] + '_node.appendChild(' + variable[0] + '_text);');
+            links.push(template + '_node.appendChild(' + variable[0] + '_text);');
             accessors.push(variable[0] + ': function(value){' + variable[0] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ');}');
-          } else if(ins[2][0] == 'C') {
-            links.push(ins[1] + '_node.appendChild(document.createTextNode("' + esc(ins[2][1]) + '"));');
+          } else if(value_type == 'C') { // Constant
+            links.push(template + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
           }
-        } else if(ins[0] == 'node') {
-          declarations.push('var ' + ins[2] + '_node = document.createElement("' + ins[1] + '");' );
-        } else if(ins[0] == 'link') {
-          links.push(ins[1] + '_node.appendChild(' + ins[2] + '_node);');
-        } else if(ins[0] == 'forall') {
-          declarations.push('var before_' + ins[3] + ' = document.createTextNode("");');
-          declarations.push('var after_' + ins[3] + ' = document.createTextNode("");');
-          links.push(ins[1] + '_node.appendChild(before_' + ins[3] + ');');
-          links.push(ins[1] + '_node.appendChild(after_' + ins[3] + ');');
-          accessors.push(ins[2] + ': ' + 'function(value){temple_utils.render_template(before_' + ins[3] + ', after_' + ins[3] + ', "' + ins[3] + '", value, pool);}');
+        } else if(instruction == 'node') {
+          var node = ins[2];
+
+          declarations.push('var ' + node + '_node = document.createElement("' + template + '");' );
+        } else if(instruction == 'link') {
+          var node = ins[2];
+
+          links.push(template + '_node.appendChild(' + node + '_node);');
+        } else if(instruction == 'forall') {
+          var key = ins[2], // Accessor key
+              tpl = ins[3]; // Template to loop over
+
+          declarations.push('var before_' + tpl + ' = document.createTextNode("");');
+          declarations.push('var after_' + tpl + ' = document.createTextNode("");');
+          links.push(template + '_node.appendChild(before_' + tpl + ');');
+          links.push(template + '_node.appendChild(after_' + tpl + ');');
+          accessors.push(key + ': ' + 'function(value){temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", value, pool);}');
         }
       }
       accessors.push('update: function(value){temple_utils.set_all(this, value, pool);}');
