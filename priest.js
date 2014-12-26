@@ -125,13 +125,11 @@
         if(ins[0] == 'attr') {
           if(ins[3][0] == 'V') {
             var variable = split_var(ins[3][1]);
-            declarations.push('var ' + ins[2] + '_attr = document.createAttribute("' + ins[2] + '");');
-            declarations.push('var ' + variable[0] + '_attr = document.createTextNode("");');
-            links.push(ins[2] + '_attr.appendChild(' + variable[0] + '_attr)');
-            links.unshift(ins[1] + '_node.setAttributeNode(' + ins[2] + '_attr);');
-            accessors.push(variable[0] + ': function(value){' + variable[0] + '_attr.nodeValue = ' + variable[2] + '(value' + variable[1] + ');}');
+            declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + ins[2] + '");');
+            links.unshift(ins[1] + '_node.setAttributeNode(' + variable[0] + '_attr);');
+            accessors.push(variable[0] + ': function(value){' + variable[0] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ');}');
           } else if(ins[3][0] == 'C') {
-            links.push(ins[2] + '_attr.appendChild(document.createTextNode("' + esc(ins[3][1]) + '"))');
+            links.unshift(ins[1] + '_node.setAttribute("' + ins[2] + '", "' + esc(ins[3][1]) + '");');
           }
         } else if(ins[0] == 'text') {
           if(ins[2][0] == 'V') {
