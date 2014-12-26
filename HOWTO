@@ -1,7 +1,7 @@
 Build js code:
-    node priest.js examples/*temple # Dump on stdout
+    node cli.js examples/*temple # Dump on stdout
      
-    node priest.js examples/*temple > templates.js # Dump into templates.js
+    node cli.js examples/*temple > templates.js # Dump into templates.js
 
 Use:
     Load scripts [utils.js, templates.js]
