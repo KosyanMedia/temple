@@ -1,0 +1,5 @@
+- Allow more then one variable in attributes
+- Create documentFragment only if template has more then one root node
+- Do not create text node between divs
+- Implement automatic garbage collection
+- Somehow give access to external variables
