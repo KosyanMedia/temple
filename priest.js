@@ -120,12 +120,18 @@
       var declarations = ['var root_node = document.createDocumentFragment();'];
       var links = [];//Order is important here
       var accessors = [];
+
+      var declarated_attributes = {};
+
       for(var i = 0, l = instructions.length; i < l; i++) {
         var ins = instructions[i];
         if(ins[0] == 'attr') {
+          if(!declarated_attributes[ins[2]]){
+            declarated_attributes[ins[2]] = true;
+            declarations.push('var ' + ins[2] + '_attr = document.createAttribute("' + ins[2] + '");');
+          }
           if(ins[3][0] == 'V') {
             var variable = split_var(ins[3][1]);
-            declarations.push('var ' + ins[2] + '_attr = document.createAttribute("' + ins[2] + '");');
             declarations.push('var ' + variable[0] + '_attr = document.createTextNode("");');
             links.push(ins[2] + '_attr.appendChild(' + variable[0] + '_attr)');
             links.unshift(ins[1] + '_node.setAttributeNode(' + ins[2] + '_attr);');
