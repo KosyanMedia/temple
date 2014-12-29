@@ -1,3 +1,0 @@
-<div class="{{foo}} bar {{baz}}">
-  <div class="myclass"></div>
-</div>

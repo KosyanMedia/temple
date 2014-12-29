@@ -120,8 +120,6 @@
           links = [], // Order is important here
           accessors = [];
 
-      var declarated_attributes = {};
-
       for(var i = 0, l = instructions.length; i < l; i++) {
         var ins = instructions[i],
             instruction = ins[0],
@@ -132,18 +130,13 @@
               value_type = ins[3][0], // Variable or Constant
               value = ins[3][1];
 
-          if(!declarated_attributes[template + '_' + attr]){
-            declarations.push('var ' + template + '_' + attr + ' = document.createAttribute("' + attr + '");');
-            links.unshift(template + '_node.setAttributeNode(' + template + '_' + attr + ');');
-            declarated_attributes[template + '_' + attr] = true;
-          }
           if(value_type == 'V') { // Variable
             var variable = split_var(value);
-            declarations.push('var ' + variable[0] + '_attr = document.createTextNode("");');
-            links.push(template + '_' + attr + '.appendChild(' + variable[0] + '_attr);');
-            accessors.push(variable[0] + ': function(value){' + variable[0] + '_attr.nodeValue = ' + variable[2] + '(value' + variable[1] + ');}');
+            declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + attr + '");');
+            links.unshift(template + '_node.setAttributeNode(' + variable[0] + '_attr);');
+            accessors.push(variable[0] + ': function(value){' + variable[0] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ');}');
           } else if(value_type == 'C') { // Constant
-            links.push(template + '_' + attr + '.appendChild(document.createTextNode("' + esc(value) + '"))');
+            links.unshift(template + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
           }
         } else if(instruction == 'text') {
           var value_type = ins[2][0], // Variable or Constant
