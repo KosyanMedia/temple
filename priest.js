@@ -53,6 +53,9 @@
       } else if(n.nodeType == 1) { //Element
         if(n.tagName == 'forall') {
           var new_template_id = template_id + '_nested' + new_id();
+          if(n.hasAttribute('name')) {
+            new_template_id = n.getAttribute('name');
+          }
           emit('forall', template_id, parent_id, n.getAttribute('key'), new_template_id);
           for(var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
             node(new_template_id, 'root', c[i], emit);
