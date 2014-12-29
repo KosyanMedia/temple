@@ -76,7 +76,7 @@
           }
         }
       } else {
-        console.log('||nodeType=>' + n.nodeType);
+        //console.log('||nodeType=>' + n.nodeType);
       }
     }
 
@@ -95,22 +95,24 @@
     function split_var(v) {
       var v = v.replace(/^\s+|\s+$/g, '');
       var pipe = v.indexOf('|');
-      var tor = [v.replace(/\.|\[|\]/g, '_'), '', ''];
-      if(pipe != -1) {
-        tor[2] = 'filters.' + v.substr(pipe + 1).replace(/^\s+|\s+$/g, '');
-        v = v.substr(0, pipe).replace(/\.|\[|\]/g, '_').replace(/^\s+|\s+$/g, '');
-        tor[0] = v;
-      }
       var dot = v.indexOf('.');
       var bra = v.indexOf('[');
+      var tor = [v, '', '', v.replace(/\.|\[|\]/g, '_')];
+      if(pipe != -1) {
+        tor[2] = 'filters.' + v.substr(pipe + 1).replace(/^\s+|\s+$/g, '');
+        v = v.substr(0, pipe).replace(/^\s+|\s+$/g, '');
+        tor[3] = v.replace(/\.|\[|\]/g, '_');
+      }
       if(dot != -1 || bra != -1) {
         if(dot == - 1)
           dot = 1000;
         if(bra == - 1)
           bra = 1000;
         var ind = Math.min(dot, bra);
+        tor[0] = v.substr(0, ind);
         tor[1] = v.substr(ind);
       }
+      //console.log(tor);
       return tor;
     }
 
@@ -119,62 +121,109 @@
         return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
       }
 
+      var buff = [];
+
       var declarations = ['var root_node = document.createDocumentFragment();'],
           links = [], // Order is important here
-          accessors = [];
+          accessors = {};
 
       for(var i = 0, l = instructions.length; i < l; i++) {
         var ins = instructions[i],
             instruction = ins[0],
-            template = ins[1];
+            parent_id = ins[1];
+
+        if(buff.length > 0 && buff[0][0] == 'attr' && (instruction != 'attr' || buff[0][1] != parent_id || buff[0][2] != ins[2])) {
+          if(buff.length == 1) {
+            var pid = buff[0][1],
+                attr = buff[0][2],
+                value_type = buff[0][3][0], // Variable or Constant
+                value = buff[0][3][1];
+  
+            if(value_type == 'V') { // Variable
+              var variable = split_var(value);
+              declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + attr + '");');
+              links.unshift(pid + '_node.setAttributeNode(' + variable[0] + '_attr);');
+              accessors[variable[0]] = accessors[variable[0]] || [];
+              accessors[variable[0]].push(variable[3] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ')');
+            } else if(value_type == 'C') { // Constant
+              links.unshift(pid + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
+            }
+          } else {
+            var node_var_name = buff[0][1] + '_' + buff[0][2] + '_attr';
+            var attr_update_func = buff[0][1] + '_' + buff[0][2] + '_update';
+            declarations.push('var ' + node_var_name + ' = document.createAttribute("' + buff[0][2] + '");');
+            links.unshift(buff[0][1] + '_node.setAttributeNode(' + node_var_name + ');');
+            var parts = [];
+            for(var j = 0, k = buff.length; j < k; j++) {
+              var pid = buff[j][1],
+                  attr = buff[j][2],
+                  value_type = buff[j][3][0], // Variable or Constant
+                  value = buff[j][3][1];
+
+              if(value_type == 'C') {
+                parts.push('"' + esc(value) + '"');
+              } else if(value_type == 'V') {
+                var variable = split_var(value);
+                parts.push(variable[3] + '_var');
+                declarations.push('var ' + variable[3] + '_var = "";');
+                accessors[variable[0]] = accessors[variable[0]] || [];
+		accessors[variable[0]].push(variable[3] + '_var = ' + variable[2] + '(value' + variable[1] + ')');
+                accessors[variable[0]].push(attr_update_func + '()');
+              }
+            }
+            declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
+          }
+          buff = [];
+        }
 
         if(instruction == 'attr') {
-          var attr = ins[2],
-              value_type = ins[3][0], // Variable or Constant
-              value = ins[3][1];
-
-          if(value_type == 'V') { // Variable
-            var variable = split_var(value);
-            declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + attr + '");');
-            links.unshift(template + '_node.setAttributeNode(' + variable[0] + '_attr);');
-            accessors.push(variable[0] + ': function(value){' + variable[0] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ');}');
-          } else if(value_type == 'C') { // Constant
-            links.unshift(template + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
-          }
-        } else if(instruction == 'text') {
+          buff.push(ins);
+       } else if(instruction == 'text') {
           var value_type = ins[2][0], // Variable or Constant
               value = ins[2][1];
 
           if(value_type == 'V') { // Variable
             var variable = split_var(value);
-            declarations.push('var ' + variable[0] + '_text = document.createTextNode("");');
-            links.push(template + '_node.appendChild(' + variable[0] + '_text);');
-            accessors.push(variable[0] + ': function(value){' + variable[0] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ');}');
+            declarations.push('var ' + variable[3] + '_text = document.createTextNode("");');
+            links.push(parent_id + '_node.appendChild(' + variable[3] + '_text);');
+            accessors[variable[0]] = accessors[variable[0]] || [];
+            accessors[variable[0]].push(variable[3] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
           } else if(value_type == 'C') { // Constant
-            links.push(template + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
+            links.push(parent_id + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
           }
         } else if(instruction == 'node') {
           var node = ins[2];
 
-          declarations.push('var ' + node + '_node = document.createElement("' + template + '");' );
+          declarations.push('var ' + node + '_node = document.createElement("' + parent_id + '");' );
         } else if(instruction == 'link') {
           var node = ins[2];
 
-          links.push(template + '_node.appendChild(' + node + '_node);');
+          links.push(parent_id + '_node.appendChild(' + node + '_node);');
         } else if(instruction == 'forall') {
           var key = ins[2], // Accessor key
               tpl = ins[3]; // Template to loop over
 
           declarations.push('var before_' + tpl + ' = document.createTextNode("");');
           declarations.push('var after_' + tpl + ' = document.createTextNode("");');
-          links.push(template + '_node.appendChild(before_' + tpl + ');');
-          links.push(template + '_node.appendChild(after_' + tpl + ');');
-          accessors.push(key + ': ' + 'function(value){temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", value, pool);}');
+          links.push(parent_id + '_node.appendChild(before_' + tpl + ');');
+          links.push(parent_id + '_node.appendChild(after_' + tpl + ');');
+          accessors[key] = accessors[key] || [];
+          accessors[key].push('temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", value, pool)');
         }
       }
-      accessors.push('update: function(value){temple_utils.set_all(this, value, pool);}');
-      var accessors_code = '{' + accessors.join(', ')+ '}';
-      links.push('return [root_node, ' + accessors_code + '];');
+      accessors['update'] = ['temple_utils.set_all(this, value, pool)'];
+      //console.log(accessors);
+      var accessors_code = [];
+      accessors_code.push('{');
+      for(var key in accessors) {
+        accessors_code.push(key + ': function(value){' )
+        accessors_code.push(accessors[key].join(';'));
+        accessors_code.push('}');
+        accessors_code.push(',');
+      }
+      accessors_code.pop();
+      accessors_code.push('}');
+      links.push('return [root_node, ' + accessors_code.join('') + '];');
       return declarations.join('\n') + '\n' + links.join('\n');
     }
 
