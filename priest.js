@@ -144,7 +144,7 @@
             if(value_type == 'V') { // Variable
               var variable = split_var(value, pid);
               declarations.push('var ' + variable[3] + '_attr = document.createAttribute("' + attr + '");');
-              links.unshift(pid + '_node.setAttributeNode(' + variable[0] + '_attr);');
+              links.unshift(pid + '_node.setAttributeNode(' + variable[3] + '_attr);');
               accessors[variable[0]] = accessors[variable[0]] || [];
               accessors[variable[0]].push(variable[3] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ')');
             } else if(value_type == 'C') { // Constant
