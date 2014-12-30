@@ -111,12 +111,15 @@
         var ind = Math.min(dot, bra);
         tor[0] = v.substr(0, ind);
         tor[1] = v.substr(ind);
+      } else {
+        tor[0] = v;
+        tor[1] = '';
       }
-      //console.log(tor);
+      console.log(tor);
       return tor;
     }
 
-    function builder(instructions) {//Single-pass translator
+    function builder(instructions) {//Single-pass translator enchanted with buffered optimizations!
       function esc(s) {
         return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
       }
