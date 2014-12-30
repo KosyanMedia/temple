@@ -92,16 +92,16 @@
       }
     }
 
-    function split_var(v) {
+    function split_var(v, pid) {
       var v = v.replace(/^\s+|\s+$/g, '');
       var pipe = v.indexOf('|');
       var dot = v.indexOf('.');
       var bra = v.indexOf('[');
-      var tor = [v, '', '', v.replace(/\.|\[|\]/g, '_')];
+      var tor = [v, '', '', pid + '_' + v.replace(/\.|\[|\]/g, '_')];
       if(pipe != -1) {
         tor[2] = 'filters.' + v.substr(pipe + 1).replace(/^\s+|\s+$/g, '');
         v = v.substr(0, pipe).replace(/^\s+|\s+$/g, '');
-        tor[3] = v.replace(/\.|\[|\]/g, '_');
+        tor[3] = pid + '_' + v.replace(/\.|\[|\]/g, '_');
       }
       if(dot != -1 || bra != -1) {
         if(dot == - 1)
@@ -142,8 +142,8 @@
                 value = buff[0][3][1];
   
             if(value_type == 'V') { // Variable
-              var variable = split_var(value);
-              declarations.push('var ' + variable[0] + '_attr = document.createAttribute("' + attr + '");');
+              var variable = split_var(value, pid);
+              declarations.push('var ' + variable[3] + '_attr = document.createAttribute("' + attr + '");');
               links.unshift(pid + '_node.setAttributeNode(' + variable[0] + '_attr);');
               accessors[variable[0]] = accessors[variable[0]] || [];
               accessors[variable[0]].push(variable[3] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ')');
@@ -165,7 +165,7 @@
               if(value_type == 'C') {
                 parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
-                var variable = split_var(value);
+                var variable = split_var(value, pid);
                 parts.push(variable[3] + '_var');
                 declarations.push('var ' + variable[3] + '_var = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [0];
@@ -186,7 +186,7 @@
               value = ins[2][1];
 
           if(value_type == 'V') { // Variable
-            var variable = split_var(value);
+            var variable = split_var(value, parent_id);
             declarations.push('var ' + variable[3] + '_text = document.createTextNode("");');
             links.push(parent_id + '_node.appendChild(' + variable[3] + '_text);');
             accessors[variable[0]] = accessors[variable[0]] || [];
