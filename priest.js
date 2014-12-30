@@ -169,7 +169,7 @@
                 parts.push(variable[3] + '_var');
                 declarations.push('var ' + variable[3] + '_var = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [0];
-                accessors[variable[0]].pop();
+                //accessors[variable[0]].pop();
 		accessors[variable[0]].push(variable[3] + '_var = ' + variable[2] + '(value' + variable[1] + ')');
                 accessors[variable[0]].push(attr_update_func + '()');
               }
