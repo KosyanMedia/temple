@@ -115,7 +115,6 @@
         tor[0] = v;
         tor[1] = '';
       }
-      console.log(tor);
       return tor;
     }
 
