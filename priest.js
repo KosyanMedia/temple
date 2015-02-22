@@ -166,11 +166,12 @@
                 parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
-                parts.push(variable[3] + '_var');
-                declarations.push('var ' + variable[3] + '_var = "";');
-                accessors[variable[0]] = accessors[variable[0]] || [0];
+                var vid = variable[3] + new_id();
+                parts.push(vid + '_var');
+                declarations.push('var ' + vid + '_var = "";');
+                accessors[variable[0]] = accessors[variable[0]] || [];
                 //accessors[variable[0]].pop();
-		accessors[variable[0]].push(variable[3] + '_var = ' + variable[2] + '(value' + variable[1] + ')');
+		accessors[variable[0]].push(vid + '_var = ' + variable[2] + '(value' + variable[1] + ')');
                 accessors[variable[0]].push(attr_update_func + '()');
               }
             }
@@ -187,10 +188,11 @@
 
           if(value_type == 'V') { // Variable
             var variable = split_var(value, parent_id);
-            declarations.push('var ' + variable[3] + '_text = document.createTextNode("");');
-            links.push(parent_id + '_node.appendChild(' + variable[3] + '_text);');
+            var vid = variable[3] + new_id();
+            declarations.push('var ' + vid + '_text = document.createTextNode("");');
+            links.push(parent_id + '_node.appendChild(' + vid + '_text);');
             accessors[variable[0]] = accessors[variable[0]] || [];
-            accessors[variable[0]].push(variable[3] + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
+            accessors[variable[0]].push(vid + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
           } else if(value_type == 'C') { // Constant
             links.push(parent_id + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
           }
@@ -227,7 +229,7 @@
       accessors_code.pop();
       accessors_code.push('}');
       links.push('return [root_node, ' + accessors_code.join('') + '];');
-      return declarations.join('\n') + '\n' + links.join('\n');
+      return declarations.join('') + links.join('');
     }
 
 
@@ -243,10 +245,10 @@
 
     var templates_code = [];
     for(var k in templates) {
-      templates_code.push(k + ': function(pool){' + builder(templates[k]).replace(/\n/g, "\n        ") + '\n    }');
+      templates_code.push(k + ': function(pool){' + builder(templates[k]) + '}');
     }
     output += '(function(window){\n';
-    output += 'var templates_list = {\n    ' + templates_code.join(',\n    ') + '\n};';
+    output += 'var templates_list = {' + templates_code.join(',') + '};';
     output += 'window.templates_list = window.templates_list || {};\n';
     output += 'window.templates_list.' + Object.keys(templates)[0] + ' = temple_utils.pool(templates_list);\n';
     output += '})(window);\n';
