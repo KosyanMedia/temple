@@ -170,9 +170,12 @@
                 parts.push(vid + '_var');
                 declarations.push('var ' + vid + '_var = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [];
-                //accessors[variable[0]].pop();
 		accessors[variable[0]].push(vid + '_var = ' + variable[2] + '(value' + variable[1] + ')');
-                accessors[variable[0]].push(attr_update_func + '()');
+                var update_func_call = attr_update_func + '()';
+                if(accessors[variable[0]].indexOf(update_func_call) >= 0) {
+                  accessors[variable[0]].splice(accessors[variable[0]].indexOf(update_func_call), 1);
+                }
+                accessors[variable[0]].push(update_func_call);
               }
             }
             declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
