@@ -4,7 +4,6 @@
   var fs = require('fs');
 
   module.exports = function(templates_files){
-    var output = "";
 
     if(!(templates_files instanceof Array)){
       templates_files = [templates_files];
@@ -52,11 +51,20 @@
         string(n.nodeValue);
       } else if(n.nodeType == 1) { //Element
         if(n.tagName == 'forall') {
-          var new_template_id = template_id + '_nested' + new_id();
+          var new_template_id = template_id + '_forall_' + new_id();
           if(n.hasAttribute('name')) {
             new_template_id = n.getAttribute('name');
           }
           emit('forall', template_id, parent_id, n.getAttribute('key'), new_template_id);
+          for(var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
+            node(new_template_id, 'root', c[i], emit);
+          }
+        } else if(n.tagName == 'if') {
+          var new_template_id = template_id + '_if_' + new_id();
+          if(n.hasAttribute('name')) {
+            new_template_id = n.getAttribute('name');
+          }
+          emit('if', template_id, parent_id, n.getAttribute('key'), new_template_id);
           for(var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
             node(new_template_id, 'root', c[i], emit);
           }
@@ -185,7 +193,7 @@
 
         if(instruction == 'attr') {
           buff.push(ins);
-       } else if(instruction == 'text') {
+        } else if(instruction == 'text') {
           var value_type = ins[2][0], // Variable or Constant
               value = ins[2][1];
 
@@ -207,34 +215,47 @@
           var node = ins[2];
 
           links.push(parent_id + '_node.appendChild(' + node + '_node);');
+        } else if(instruction == 'if') {
+          var value = ins[2], // Accessor key
+              tpl = ins[3]; // Template to loop over
+          var variable = split_var(value, parent_id);
+          declarations.push('var before_' + tpl + ' = document.createTextNode("");');
+          declarations.push('var after_' + tpl + ' = document.createTextNode("");');
+          links.push(parent_id + '_node.appendChild(before_' + tpl + ');');
+          links.push(parent_id + '_node.appendChild(after_' + tpl + ');');
+          accessors[variable[0]] = accessors[variable[0]] || [];
+          var if_arg = variable[0] + '_' + tpl;
+          accessors[variable[0]].push('var ' + if_arg + ' = ' + variable[2]+ ' (value' + variable[1] + ')');
+          accessors[variable[0]].push(if_arg + ' = ' + if_arg + ' ? [' + if_arg +  '] : []');
+          accessors[variable[0]].push('temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", ' +  if_arg + ', pool)');
         } else if(instruction == 'forall') {
-          var key = ins[2], // Accessor key
+          var variable = split_var(ins[2]), // Accessor key
               tpl = ins[3]; // Template to loop over
 
           declarations.push('var before_' + tpl + ' = document.createTextNode("");');
           declarations.push('var after_' + tpl + ' = document.createTextNode("");');
           links.push(parent_id + '_node.appendChild(before_' + tpl + ');');
           links.push(parent_id + '_node.appendChild(after_' + tpl + ');');
-          accessors[key] = accessors[key] || [];
-          accessors[key].push('temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", value, pool)');
+          accessors[variable[0]] = accessors[variable[0]] || [];
+          accessors[variable[0]].push('temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + ')' + ', pool)');
         }
       }
-      accessors['update'] = ['temple_utils.set_all(this, value, pool)'];
-      //console.log(accessors);
       var accessors_code = [];
-      accessors_code.push('{');
-      for(var key in accessors) {
-        accessors_code.push(key + ': function(value){' )
-        accessors_code.push(accessors[key].join(';'));
-        accessors_code.push('}');
-        accessors_code.push(',');
+      if(Object.keys(accessors).length > 0) {
+        accessors_code.push(', {');
+        accessors['update'] = ['temple_utils.set_all(this, value, pool)'];
+        for(var key in accessors) {
+          accessors_code.push(key + ':function(value){' )
+          accessors_code.push(accessors[key].join(';'));
+          accessors_code.push('}');
+          accessors_code.push(',');
+        }
+        accessors_code.pop();
+	accessors_code.push('}');
       }
-      accessors_code.pop();
-      accessors_code.push('}');
-      links.push('return [root_node, ' + accessors_code.join('') + '];');
+      links.push('return [root_node' + accessors_code.join('') + '];');
       return declarations.join('') + links.join('');
     }
-
 
     var parser = new DOMParser();
     templates_files.forEach(function(val, index, array) {
@@ -242,7 +263,7 @@
       _.pop();
       _ = _.join('.').split('/');
       var name = _.pop();
-      var template_string =  fs.readFileSync(val, {encoding: 'utf8'});
+      var template_string = fs.readFileSync(val, {encoding: 'utf8'});
       node(name, 'root', parser.parseFromString(template_string), collector);
     });
 
@@ -250,13 +271,12 @@
     for(var k in templates) {
       templates_code.push(k + ': function(pool){' + builder(templates[k]) + '}');
     }
-    output += '(function(window){\n';
-    output += 'var templates_list = {' + templates_code.join(',') + '};';
-    output += 'window.templates_list = window.templates_list || {};\n';
-    output += 'window.templates_list.' + Object.keys(templates)[0] + ' = temple_utils.pool(templates_list);\n';
-    output += '})(window);\n';
 
+    var output = "";
+    output += '(function(window){';
+    output += 'var templates_list = {' + templates_code.join(',') + '};';
+    output += 'window.templates = temple_utils.pool(templates_list);';
+    output += '})(window);';
     return output;
   };
-
 })(module);
