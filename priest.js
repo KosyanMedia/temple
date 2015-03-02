@@ -3,7 +3,7 @@
   var DOMParser = require('xmldom').DOMParser;
   var fs = require('fs');
 
-  module.exports = function(templates_files){
+  module.exports = function(templates_files, as_module){
 
     if(!(templates_files instanceof Array)){
       templates_files = [templates_files];
@@ -148,7 +148,7 @@
                 attr = buff[0][2],
                 value_type = buff[0][3][0], // Variable or Constant
                 value = buff[0][3][1];
-  
+
             if(value_type == 'V') { // Variable
               var variable = split_var(value, pid);
               declarations.push('var ' + variable[3] + '_attr = document.createAttribute("' + attr + '");');
@@ -272,11 +272,18 @@
       templates_code.push(k + ': function(pool){' + builder(templates[k]) + '}');
     }
 
+
     var output = "";
-    output += '(function(window){';
-    output += 'var templates_list = {' + templates_code.join(',') + '};';
-    output += 'window.templates = temple_utils.pool(templates_list);';
-    output += '})(window);';
+
+    if(as_module){
+      output += 'module.exports = {\n    ' + templates_code.join(',\n    ') + '\n};';
+    } else {
+      output += '(function(window){';
+      output += 'var templates_list = {' + templates_code.join(',') + '};';
+      output += 'window.templates = temple_utils.pool(templates_list);';
+      output += '})(window);';
+    }
     return output;
   };
+
 })(module);

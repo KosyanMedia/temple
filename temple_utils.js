@@ -84,10 +84,9 @@
     return methods;
   };
 
-  window.temple_utils = {
-    render_template: render_template,
-    pool: pool,
-    set_all: set_all
-  };
+  var container = module ? module.exports : (window.temple_utils = {});
+  container.render_template = render_template;
+  container.pool = pool;
+  container.set_all = set_all;
 
-})(window);
+}).call(this);
