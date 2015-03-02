@@ -84,7 +84,7 @@
     return methods;
   };
 
-  var container = module ? module.exports : (window.temple_utils = {});
+  var container = typeof module !== "undefined" ? module.exports : (window.temple_utils = {});
   container.render_template = render_template;
   container.pool = pool;
   container.set_all = set_all;
