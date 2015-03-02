@@ -252,6 +252,8 @@
         }
         accessors_code.pop();
 	accessors_code.push('}');
+      } else {
+	accessors_code.push(', {}');
       }
       links.push('return [root_node' + accessors_code.join('') + '];');
       return declarations.join('') + links.join('');
