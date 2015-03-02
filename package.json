@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "author": "Boris Kaplunovsky",
   "main": "./priest.js",
-  "devDependencies": {
+  "dependencies": {
     "xmldom": "^0.1.19"
   }
 }
