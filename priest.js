@@ -154,11 +154,11 @@
               var variable = split_var(value, parent_id);
               var vid = variable[3] + new_id();
               declarations.push('var ' + vid + '_text = document.createTextNode("");');
-              links.push(parent_id + '_node.appendChild(' + vid + '_text);');
+              links.push(buff[0][1] + '_node.appendChild(' + vid + '_text);');
               accessors[variable[0]] = accessors[variable[0]] || [];
               accessors[variable[0]].push(vid + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
             } else if(value_type == 'C') { // Constant
-              links.push(parent_id + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
+              links.push(buff[0][1] + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
             }
           } else {
             var tid = new_id();
