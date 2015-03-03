@@ -47,6 +47,7 @@
 
       if(n.nodeType == 9) { //Document
         node(template_id, parent_id, n.firstChild, emit);
+        emit('stop', template_id);
       } else if(n.nodeType == 3) { //Text
         string(n.nodeValue);
       } else if(n.nodeType == 1) { //Element
@@ -59,6 +60,7 @@
           for(var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
             node(new_template_id, 'root', c[i], emit);
           }
+          emit('stop', new_template_id);
         } else if(n.tagName == 'if') {
           var new_template_id = template_id + '_if_' + new_id();
           if(n.hasAttribute('name')) {
@@ -68,6 +70,7 @@
           for(var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
             node(new_template_id, 'root', c[i], emit);
           }
+          emit('stop', new_template_id);
         } else {
           var node_id = 'node' + new_id();
           emit('node', template_id, n.tagName, node_id);
@@ -142,6 +145,54 @@
             instruction = ins[0],
             parent_id = ins[1];
 
+        if(buff.length > 0 && buff[0][0] == 'text' && (instruction != 'text' || buff[0][1] != parent_id)) {
+          if(buff.length == 1) {
+            var value_type = buff[0][2][0], // Variable or Constant
+                value = buff[0][2][1];
+  
+            if(value_type == 'V') { // Variable
+              var variable = split_var(value, parent_id);
+              var vid = variable[3] + new_id();
+              declarations.push('var ' + vid + '_text = document.createTextNode("");');
+              links.push(parent_id + '_node.appendChild(' + vid + '_text);');
+              accessors[variable[0]] = accessors[variable[0]] || [];
+              accessors[variable[0]].push(vid + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
+            } else if(value_type == 'C') { // Constant
+              links.push(parent_id + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
+            }
+          } else {
+            var tid = new_id();
+            var node_var_name = buff[0][1] + '_text' + tid;
+            var attr_update_func = buff[0][1] + '_update' + tid;
+            declarations.push('var ' + node_var_name + ' = document.createTextNode("");');
+            links.unshift(buff[0][1] + '_node.appendChild(' + node_var_name + ');');
+            var parts = [];
+            for(var j = 0, k = buff.length; j < k; j++) {
+              var pid = buff[j][1],
+                  value_type = buff[j][2][0], // Variable or Constant
+                  value = buff[j][2][1];
+
+              if(value_type == 'C') {
+                parts.push('"' + esc(value) + '"');
+              } else if(value_type == 'V') {
+                var variable = split_var(value, pid);
+                var vid = variable[3] + new_id();
+                parts.push(vid + '_var');
+                declarations.push('var ' + vid + '_var = "";');
+                accessors[variable[0]] = accessors[variable[0]] || [];
+		accessors[variable[0]].push(vid + '_var = ' + variable[2] + '(value' + variable[1] + ')');
+                var update_func_call = attr_update_func + '()';
+                if(accessors[variable[0]].indexOf(update_func_call) >= 0) {
+                  accessors[variable[0]].splice(accessors[variable[0]].indexOf(update_func_call), 1);
+                }
+                accessors[variable[0]].push(update_func_call);
+              }
+            }
+            declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.nodeValue = ' + parts.join(' + ')+ ';};');
+          }
+          buff = [];
+        }
+
         if(buff.length > 0 && buff[0][0] == 'attr' && (instruction != 'attr' || buff[0][1] != parent_id || buff[0][2] != ins[2])) {
           if(buff.length == 1) {
             var pid = buff[0][1],
@@ -187,26 +238,13 @@
               }
             }
             declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
+            //console.log(declarations);
           }
           buff = [];
         }
 
-        if(instruction == 'attr') {
+        if(instruction == 'attr' || instruction == 'text') {
           buff.push(ins);
-        } else if(instruction == 'text') {
-          var value_type = ins[2][0], // Variable or Constant
-              value = ins[2][1];
-
-          if(value_type == 'V') { // Variable
-            var variable = split_var(value, parent_id);
-            var vid = variable[3] + new_id();
-            declarations.push('var ' + vid + '_text = document.createTextNode("");');
-            links.push(parent_id + '_node.appendChild(' + vid + '_text);');
-            accessors[variable[0]] = accessors[variable[0]] || [];
-            accessors[variable[0]].push(vid + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
-          } else if(value_type == 'C') { // Constant
-            links.push(parent_id + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
-          }
         } else if(instruction == 'node') {
           var node = ins[2];
 
@@ -268,6 +306,7 @@
       var template_string = fs.readFileSync(val, {encoding: 'utf8'});
       node(name, 'root', parser.parseFromString(template_string), collector);
     });
+    //console.log(templates);
 
     var templates_code = [];
     for(var k in templates) {

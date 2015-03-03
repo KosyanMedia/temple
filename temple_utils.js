@@ -1,4 +1,4 @@
-(function(window){
+(function(context){
   var set_all = function(tpl, data, pool) {
     for(var k in data) {
       if(tpl.hasOwnProperty(k)) {
@@ -67,7 +67,7 @@
         }
         console.log(free);
       },
-      get: function(template) {
+      get: function(template, data) {
         if(! busy.hasOwnProperty(template)) {
           busy[template] = [];
         }
@@ -77,7 +77,10 @@
         } else {
           tor = templates[template](methods);
         }
-        busy[template].push(tor);
+        //busy[template].push(tor); Do not loose memory :)
+        if(data) {
+          set_all(tor[1], data, this);
+        }
         return tor;
       }
     };
@@ -88,5 +91,4 @@
   container.render_template = render_template;
   container.pool = pool;
   container.set_all = set_all;
-
 }).call(this);
