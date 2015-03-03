@@ -1,0 +1,5 @@
+<ul id="{{id}}">
+ <forall key="items">
+  <li>{{value}}</li>
+ </forall>
+</ul>

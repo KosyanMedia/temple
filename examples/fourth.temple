@@ -1,0 +1,8 @@
+<div>
+  <if key="plane">
+    Flight number: {{airline}} {{number}}
+  </if>
+  <if key="train">
+    Train number: {{number}}
+  </if>
+</div>
