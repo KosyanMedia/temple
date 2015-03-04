@@ -310,7 +310,8 @@
 
     var templates_code = [];
     for(var k in templates) {
-      templates_code.push(k + ': function(pool){' + builder(templates[k]) + '}');
+      if(templates[k].length > 1) //Ignore stop instruction
+        templates_code.push(k + ': function(pool){' + builder(templates[k]) + '}');
     }
 
 
