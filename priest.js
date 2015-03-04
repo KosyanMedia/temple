@@ -142,11 +142,11 @@
   
             if(value_type == 'V') { // Variable
               var variable = split_var(value, parent_id);
-              var vid = variable[3] + new_id();
-              declarations.push('var ' + vid + '_text = document.createTextNode("");');
-              links.push(buff[0][1] + '_node.appendChild(' + vid + '_text);');
+              var var_id = variable[3] + new_id() + '_text';
+              declarations.push('var ' + var_id + ' = document.createTextNode("");');
+              links.push(buff[0][1] + '_node.appendChild(' + var_id + ');');
               accessors[variable[0]] = accessors[variable[0]] || [];
-              accessors[variable[0]].push(vid + '_text.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
+              accessors[variable[0]].push(var_id + '.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
             } else if(value_type == 'C') { // Constant
               links.push(buff[0][1] + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
             }
@@ -166,11 +166,11 @@
                 parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
-                var vid = variable[3] + new_id();
-                parts.push(vid + '_var');
-                declarations.push('var ' + vid + '_var = "";');
+                var var_id = variable[3] + new_id() + '_var';
+                parts.push(var_id);
+                declarations.push('var ' + var_id + ' = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [];
-		accessors[variable[0]].push(vid + '_var = ' + variable[2] + '(value' + variable[1] + ')');
+		accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
                 var update_func_call = attr_update_func + '()';
                 if(accessors[variable[0]].indexOf(update_func_call) >= 0) {
                   accessors[variable[0]].splice(accessors[variable[0]].indexOf(update_func_call), 1);
@@ -196,16 +196,17 @@
               if(attr == 'value') {
                 accessors[variable[0]].push(pid + '_node.value = ' + variable[2] + '(value' + variable[1] + ')');
               } else {
-                declarations.push('var ' + variable[3] + '_attr = document.createAttribute("' + attr + '");');
-                links.unshift(pid + '_node.setAttributeNode(' + variable[3] + '_attr);');
-                accessors[variable[0]].push(variable[3] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ')');
+                var var_id = variable[3] + new_id() + '_attr';
+                declarations.push('var ' + var_id + ' = document.createAttribute("' + attr + '");');
+                links.unshift(pid + '_node.setAttributeNode(' + var_id + ');');
+                accessors[variable[0]].push(var_id + '.value = ' + variable[2] + '(value' + variable[1] + ')');
               }
             } else if(value_type == 'C') { // Constant
               links.unshift(pid + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
             }
           } else {
             var parts = [];
-            var attr_update_func = buff[0][1] + '_' + buff[0][2] + '_update';
+            var attr_update_func = buff[0][1] + '_' + buff[0][2].replace(/-/g, '_') + '_update';
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
                   attr = buff[j][2],
@@ -216,11 +217,11 @@
                 parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
-                var vid = variable[3] + new_id();
-                parts.push(vid + '_var');
-                declarations.push('var ' + vid + '_var = "";');
+                var var_id = variable[3] + new_id() + '_var';
+                parts.push(var_id);
+                declarations.push('var ' + var_id + ' = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [];
-		accessors[variable[0]].push(vid + '_var = ' + variable[2] + '(value' + variable[1] + ')');
+		accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
                 var update_func_call = attr_update_func + '()';
                 if(accessors[variable[0]].indexOf(update_func_call) >= 0) {
                   accessors[variable[0]].splice(accessors[variable[0]].indexOf(update_func_call), 1);
@@ -228,7 +229,7 @@
                 accessors[variable[0]].push(update_func_call);
               }
             }
-            var node_var_name = buff[0][1] + '_' + buff[0][2] + '_attr';
+            var node_var_name = buff[0][1] + '_' + buff[0][2].replace(/-/g, '_') + '_attr';
             if(buff[0][2] == 'value') {
               node_var_name = buff[0][1] + '_node';
             } else {
