@@ -202,19 +202,20 @@
 
             if(value_type == 'V') { // Variable
               var variable = split_var(value, pid);
-              declarations.push('var ' + variable[3] + '_attr = document.createAttribute("' + attr + '");');
-              links.unshift(pid + '_node.setAttributeNode(' + variable[3] + '_attr);');
               accessors[variable[0]] = accessors[variable[0]] || [];
-              accessors[variable[0]].push(variable[3] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ')');
+              if(attr == 'value') {
+                accessors[variable[0]].push(pid + '_node.value = ' + variable[2] + '(value' + variable[1] + ')');
+              } else {
+                declarations.push('var ' + variable[3] + '_attr = document.createAttribute("' + attr + '");');
+                links.unshift(pid + '_node.setAttributeNode(' + variable[3] + '_attr);');
+                accessors[variable[0]].push(variable[3] + '_attr.value = ' + variable[2] + '(value' + variable[1] + ')');
+              }
             } else if(value_type == 'C') { // Constant
               links.unshift(pid + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
             }
           } else {
-            var node_var_name = buff[0][1] + '_' + buff[0][2] + '_attr';
-            var attr_update_func = buff[0][1] + '_' + buff[0][2] + '_update';
-            declarations.push('var ' + node_var_name + ' = document.createAttribute("' + buff[0][2] + '");');
-            links.unshift(buff[0][1] + '_node.setAttributeNode(' + node_var_name + ');');
             var parts = [];
+            var attr_update_func = buff[0][1] + '_' + buff[0][2] + '_update';
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
                   attr = buff[j][2],
@@ -236,6 +237,13 @@
                 }
                 accessors[variable[0]].push(update_func_call);
               }
+            }
+            var node_var_name = buff[0][1] + '_' + buff[0][2] + '_attr';
+            if(buff[0][2] == 'value') {
+              node_var_name = buff[0][1] + '_node';
+            } else {
+              declarations.push('var ' + node_var_name + ' = document.createAttribute("' + buff[0][2] + '");');
+              links.unshift(buff[0][1] + '_node.setAttributeNode(' + node_var_name + ');');
             }
             declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
             //console.log(declarations);
