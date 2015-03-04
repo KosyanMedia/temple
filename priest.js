@@ -257,25 +257,27 @@
           var value = ins[2], // Accessor key
               tpl = ins[3]; // Template to loop over
           var variable = split_var(value, parent_id);
-          declarations.push('var before_' + tpl + ' = document.createTextNode("");');
-          declarations.push('var after_' + tpl + ' = document.createTextNode("");');
-          links.push(parent_id + '_node.appendChild(before_' + tpl + ');');
-          links.push(parent_id + '_node.appendChild(after_' + tpl + ');');
+          var tpl_id = tpl + new_id();
+          declarations.push('var before_' + tpl_id + ' = document.createTextNode("");');
+          declarations.push('var after_' + tpl_id + ' = document.createTextNode("");');
+          links.push(parent_id + '_node.appendChild(before_' + tpl_id + ');');
+          links.push(parent_id + '_node.appendChild(after_' + tpl_id + ');');
           accessors[variable[0]] = accessors[variable[0]] || [];
           var if_arg = variable[0] + '_' + tpl;
           accessors[variable[0]].push('var ' + if_arg + ' = ' + variable[2]+ ' (value' + variable[1] + ')');
           accessors[variable[0]].push(if_arg + ' = ' + if_arg + ' ? [' + if_arg +  '] : []');
-          accessors[variable[0]].push('temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", ' +  if_arg + ', pool)');
+          accessors[variable[0]].push('temple_utils.render_template(before_' + tpl_id + ', after_' + tpl_id + ', "' + tpl + '", ' +  if_arg + ', pool)');
         } else if(instruction == 'forall') {
           var variable = split_var(ins[2]), // Accessor key
               tpl = ins[3]; // Template to loop over
 
-          declarations.push('var before_' + tpl + ' = document.createTextNode("");');
-          declarations.push('var after_' + tpl + ' = document.createTextNode("");');
-          links.push(parent_id + '_node.appendChild(before_' + tpl + ');');
-          links.push(parent_id + '_node.appendChild(after_' + tpl + ');');
+          var tpl_id = tpl + new_id();
+          declarations.push('var before_' + tpl_id + ' = document.createTextNode("");');
+          declarations.push('var after_' + tpl_id + ' = document.createTextNode("");');
+          links.push(parent_id + '_node.appendChild(before_' + tpl_id + ');');
+          links.push(parent_id + '_node.appendChild(after_' + tpl_id + ');');
           accessors[variable[0]] = accessors[variable[0]] || [];
-          accessors[variable[0]].push('temple_utils.render_template(before_' + tpl + ', after_' + tpl + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + ')' + ', pool)');
+          accessors[variable[0]].push('temple_utils.render_template(before_' + tpl_id + ', after_' + tpl_id + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + ')' + ', pool)');
         }
       }
       var accessors_code = [];
