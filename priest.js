@@ -51,22 +51,12 @@
       } else if(n.nodeType == 3) { //Text
         string(n.nodeValue);
       } else if(n.nodeType == 1) { //Element
-        if(n.tagName == 'forall') {
-          var new_template_id = template_id + '_forall_' + new_id();
+        if(n.tagName == 'forall' || n.tagName == 'if') {
+          var new_template_id = template_id + '_' + n.tagName +'_' + new_id();
           if(n.hasAttribute('name')) {
             new_template_id = n.getAttribute('name');
           }
-          emit('forall', template_id, parent_id, n.getAttribute('key'), new_template_id);
-          for(var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
-            node(new_template_id, 'root', c[i], emit);
-          }
-          emit('stop', new_template_id);
-        } else if(n.tagName == 'if') {
-          var new_template_id = template_id + '_if_' + new_id();
-          if(n.hasAttribute('name')) {
-            new_template_id = n.getAttribute('name');
-          }
-          emit('if', template_id, parent_id, n.getAttribute('key'), new_template_id);
+          emit(n.tagName, template_id, parent_id, n.getAttribute('key'), new_template_id);
           for(var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
             node(new_template_id, 'root', c[i], emit);
           }
@@ -324,18 +314,13 @@
         templates_code.push(k + ': function(pool){' + builder(templates[k]) + '}');
     }
 
-
-    var output = "";
-
     if(as_module){
-      output += 'module.exports = {\n    ' + templates_code.join(',\n    ') + '\n};';
+      return 'module.exports = {' + templates_code.join(',') + '};';
     } else {
-      output += '(function(window){';
-      output += 'var templates_list = {' + templates_code.join(',') + '};';
-      output += 'window.templates = temple_utils.pool(templates_list);';
-      output += '})(window);';
+      return '(function(window){' +
+        'var templates_list = {' + templates_code.join(',') + '};' +
+        'window.templates = temple_utils.pool(templates_list);' +
+        '})(window);';
     }
-    return output;
   };
-
 })(module);
