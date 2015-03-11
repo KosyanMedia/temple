@@ -2,6 +2,7 @@
 
   var DOMParser = require('xmldom').DOMParser;
   var fs = require('fs');
+  var beautify = require('js-beautify').js_beautify;
 
   module.exports = function(templates_files, as_module){
 
@@ -308,12 +309,12 @@
     }
 
     if(as_module){
-      return 'module.exports = {' + templates_code.join(',') + '};';
+      return beautify('module.exports = {' + templates_code.join(',') + '};');
     } else {
-      return '(function(window){' +
+      return beautify('(function(window){' +
         'var templates_list = {' + templates_code.join(',') + '};' +
         'window.templates = temple_utils.pool(templates_list);' +
-        '})(window);';
+        '})(window);');
     }
   };
 })(module);

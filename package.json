@@ -5,6 +5,7 @@
   "author": "Boris Kaplunovsky",
   "main": "./priest.js",
   "dependencies": {
+    "js-beautify": "^1.5.5",
     "xmldom": "^0.1.19"
   }
 }
