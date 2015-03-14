@@ -179,6 +179,7 @@
               }
             }
             declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.nodeValue = ' + parts.join(' + ')+ ';};');
+            declarations.push(attr_update_func + '();');
           }
           buff = [];
         }
@@ -232,6 +233,7 @@
             } else {
               declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join(' + ') + ');};');
             }
+            declarations.push(attr_update_func + '();');
             //console.log(declarations);
           }
           buff = [];
