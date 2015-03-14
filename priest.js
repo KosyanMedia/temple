@@ -196,10 +196,7 @@
               if(attr == 'value') {
                 accessors[variable[0]].push(pid + '_node.value = ' + variable[2] + '(value' + variable[1] + ')');
               } else {
-                var var_id = variable[3] + new_id() + '_attr';
-                declarations.push('var ' + var_id + ' = document.createAttribute("' + attr + '");');
-                links.unshift(pid + '_node.setAttributeNode(' + var_id + ');');
-                accessors[variable[0]].push(var_id + '.value = ' + variable[2] + '(value' + variable[1] + ')');
+                accessors[variable[0]].push(pid + '_node.setAttribute("' + attr + '", ' + variable[2] + '(value' + variable[1] + '))');
               }
             } else if(value_type == 'C') { // Constant
               links.unshift(pid + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
@@ -229,14 +226,12 @@
                 accessors[variable[0]].push(update_func_call);
               }
             }
-            var node_var_name = buff[0][1] + '_' + buff[0][2].replace(/-/g, '_') + '_attr';
+            var node_var_name = buff[0][1] + '_node';
             if(buff[0][2] == 'value') {
-              node_var_name = buff[0][1] + '_node';
+              declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
             } else {
-              declarations.push('var ' + node_var_name + ' = document.createAttribute("' + buff[0][2] + '");');
-              links.unshift(buff[0][1] + '_node.setAttributeNode(' + node_var_name + ');');
+              declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join(' + ') + ');};');
             }
-            declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
             //console.log(declarations);
           }
           buff = [];
