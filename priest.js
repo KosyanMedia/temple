@@ -3,7 +3,6 @@
   var fs = require('fs');
 
   module.exports = function(templates_files, as_module, drop_spaces /*> <*/){
-
     if(!(templates_files instanceof Array)){
       templates_files = [templates_files];
     }
@@ -137,10 +136,11 @@
         if(buff.length > 0 && buff[0][0] == 'text' && (instruction != 'text' || buff[0][1] != parent_id)) {
           if(buff.length == 1) {
             var value_type = buff[0][2][0], // Variable or Constant
-                value = buff[0][2][1];
+                value = buff[0][2][1],
+                pid = buff[0][1];
   
             if(value_type == 'V') { // Variable
-              var variable = split_var(value, parent_id);
+              var variable = split_var(value, pid);
               var var_id = variable[3] + new_id() + '_text';
               declarations.push('var ' + var_id + ' = document.createTextNode("");');
               links.push(buff[0][1] + '.appendChild(' + var_id + ');');
@@ -295,6 +295,7 @@
       var template_string = fs.readFileSync(val, {encoding: 'utf8'});
       if(drop_spaces) {
         template_string = template_string.replace(/>\s+</g, '><');
+        console.log(template_string);
       }
       node(name, 'root', parser.parseFromString(template_string), collector);
     });
