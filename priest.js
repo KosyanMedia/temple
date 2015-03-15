@@ -1,9 +1,8 @@
 (function(module){
-
   var DOMParser = require('xmldom').DOMParser;
   var fs = require('fs');
 
-  module.exports = function(templates_files, as_module){
+  module.exports = function(templates_files, as_module, drop_spaces /*> <*/){
 
     if(!(templates_files instanceof Array)){
       templates_files = [templates_files];
@@ -294,6 +293,9 @@
       _ = _.join('.').split('/');
       var name = _.pop();
       var template_string = fs.readFileSync(val, {encoding: 'utf8'});
+      if(drop_spaces) {
+        template_string = template_string.replace(/>\s+</g, '><');
+      }
       node(name, 'root', parser.parseFromString(template_string), collector);
     });
     //console.log(templates);
