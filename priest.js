@@ -295,7 +295,6 @@
       var template_string = fs.readFileSync(val, {encoding: 'utf8'});
       if(drop_spaces) {
         template_string = template_string.replace(/>\s+</g, '><');
-        console.log(template_string);
       }
       node(name, 'root', parser.parseFromString(template_string), collector);
     });
