@@ -62,7 +62,7 @@
           }
           emit('stop', new_template_id);
         } else {
-          var node_id = 'node' + new_id();
+          var node_id = 'n' + new_id();
           emit('node', template_id, n.tagName, node_id);
           emit('link', template_id, parent_id, node_id);
           if(n.attributes) {
@@ -126,7 +126,7 @@
 
       var buff = [];
 
-      var declarations = ['var root_node = document.createDocumentFragment();'],
+      var declarations = ['var root = document.createDocumentFragment();'],
           links = [], // Order is important here
           accessors = {};
 
@@ -144,18 +144,18 @@
               var variable = split_var(value, parent_id);
               var var_id = variable[3] + new_id() + '_text';
               declarations.push('var ' + var_id + ' = document.createTextNode("");');
-              links.push(buff[0][1] + '_node.appendChild(' + var_id + ');');
+              links.push(buff[0][1] + '.appendChild(' + var_id + ');');
               accessors[variable[0]] = accessors[variable[0]] || [];
               accessors[variable[0]].push(var_id + '.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
             } else if(value_type == 'C') { // Constant
-              links.push(buff[0][1] + '_node.appendChild(document.createTextNode("' + esc(value) + '"));');
+              links.push(buff[0][1] + '.appendChild(document.createTextNode("' + esc(value) + '"));');
             }
           } else {
             var tid = new_id();
             var node_var_name = buff[0][1] + '_text' + tid;
             var attr_update_func = buff[0][1] + '_update' + tid;
             declarations.push('var ' + node_var_name + ' = document.createTextNode("");');
-            links.unshift(buff[0][1] + '_node.appendChild(' + node_var_name + ');');
+            links.unshift(buff[0][1] + '.appendChild(' + node_var_name + ');');
             var parts = [];
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
@@ -195,12 +195,12 @@
               var variable = split_var(value, pid);
               accessors[variable[0]] = accessors[variable[0]] || [];
               if(attr == 'value') {
-                accessors[variable[0]].push(pid + '_node.value = ' + variable[2] + '(value' + variable[1] + ')');
+                accessors[variable[0]].push(pid + '.value = ' + variable[2] + '(value' + variable[1] + ')');
               } else {
-                accessors[variable[0]].push(pid + '_node.setAttribute("' + attr + '", ' + variable[2] + '(value' + variable[1] + '))');
+                accessors[variable[0]].push(pid + '.setAttribute("' + attr + '", ' + variable[2] + '(value' + variable[1] + '))');
               }
             } else if(value_type == 'C') { // Constant
-              links.unshift(pid + '_node.setAttribute("' + attr + '", "' + esc(value) + '");');
+              links.unshift(pid + '.setAttribute("' + attr + '", "' + esc(value) + '");');
             }
           } else {
             var parts = [];
@@ -227,7 +227,7 @@
                 accessors[variable[0]].push(update_func_call);
               }
             }
-            var node_var_name = buff[0][1] + '_node';
+            var node_var_name = buff[0][1];
             if(buff[0][2] == 'value') {
               declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
             } else {
@@ -244,19 +244,19 @@
         } else if(instruction == 'node') {
           var node = ins[2];
 
-          declarations.push('var ' + node + '_node = document.createElement("' + parent_id + '");' );
+          declarations.push('var ' + node + ' = document.createElement("' + parent_id + '");' );
         } else if(instruction == 'link') {
           var node = ins[2];
 
-          links.push(parent_id + '_node.appendChild(' + node + '_node);');
+          links.push(parent_id + '.appendChild(' + node + ');');
         } else if(instruction == 'if' || instruction == 'forall') {
           var variable = split_var(ins[2], parent_id), // Accessor key
               tpl = ins[3]; // Template to loop over
           var tpl_id = tpl + new_id();
           declarations.push('var before_' + tpl_id + ' = document.createTextNode("");');
           declarations.push('var after_' + tpl_id + ' = document.createTextNode("");');
-          links.push(parent_id + '_node.appendChild(before_' + tpl_id + ');');
-          links.push(parent_id + '_node.appendChild(after_' + tpl_id + ');');
+          links.push(parent_id + '.appendChild(before_' + tpl_id + ');');
+          links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
           accessors[variable[0]] = accessors[variable[0]] || [];
           if(instruction == 'if') {
             var if_arg = variable[0] + '_' + tpl;
@@ -283,7 +283,7 @@
       } else {
 	accessors_code.push(', {}');
       }
-      links.push('return [root_node' + accessors_code.join('') + '];');
+      links.push('return [root' + accessors_code.join('') + '];');
       return declarations.join('') + links.join('');
     }
 
