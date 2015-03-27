@@ -62,7 +62,6 @@
         } else {
           var node_id = 'n' + new_id();
           emit('node', template_id, n.tagName, node_id);
-          emit('link', template_id, parent_id, node_id);
           if(n.attributes) {
             for(var a = n.attributes, i = 0, l = n.attributes.length; i < l; i++) {
               attribute(a[i].name, a[i].value, node_id);
@@ -73,6 +72,7 @@
               node(template_id, node_id, c[i], emit);
             }
           }
+          emit('link', template_id, parent_id, node_id);
         }
       } else {
         //console.log('||nodeType=>' + n.nodeType);
@@ -128,9 +128,11 @@
         }
         variables[name].push(type);
       }
+      var root_children = [];
       var buff = [];
 
-      var declarations = ['var root = document.createDocumentFragment();'],
+      //var declarations = ['var root = document.createDocumentFragment();'],
+      var declarations = [],
           links = [], // Order is important here
           accessors = {};
 
@@ -160,9 +162,9 @@
             var tid = new_id();
             var node_var_name = buff[0][1] + '_text' + tid;
             var attr_update_func = buff[0][1] + '_update' + tid;
-            declarations.push('var ' + node_var_name + ' = document.createTextNode("");');
             links.unshift(buff[0][1] + '.appendChild(' + node_var_name + ');');
             var parts = [];
+            var const_parts = [];
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
                   value_type = buff[j][2][0], // Variable or Constant
@@ -170,6 +172,7 @@
 
               if(value_type == 'C') {
                 parts.push('"' + esc(value) + '"');
+                const_parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
                 add_variable(variable[0], 'text');
@@ -185,8 +188,8 @@
                 accessors[variable[0]].push(update_func_call);
               }
             }
+            declarations.push('var ' + node_var_name + ' = document.createTextNode(' + const_parts.join('+').replace(/"\+"/g, "") + ');');
             declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.nodeValue = ' + parts.join(' + ')+ ';};');
-            declarations.push(attr_update_func + '();');
           }
           buff = [];
         }
@@ -256,8 +259,11 @@
           declarations.push('var ' + node + ' = document.createElement("' + parent_id + '");' );
         } else if(instruction == 'link') {
           var node = ins[2];
-
-          links.push(parent_id + '.appendChild(' + node + ');');
+          if(parent_id == 'root') {
+            root_children.push(node);
+          } else {
+            links.push(parent_id + '.appendChild(' + node + ');');
+          }
         } else if(instruction == 'if' || instruction == 'forall') {
           var variable = split_var(ins[2], parent_id), // Accessor key
               tpl = ins[3]; // Template to loop over
@@ -265,8 +271,13 @@
           add_variable(variable[0], 'key');
           declarations.push('var before_' + tpl_id + ' = document.createTextNode("");');
           declarations.push('var after_' + tpl_id + ' = document.createTextNode("");');
-          links.push(parent_id + '.appendChild(before_' + tpl_id + ');');
-          links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
+          if(parent_id == 'root') {
+            root_children.push('before_' + tpl_id);
+            root_children.push('after_' + tpl_id);
+          } else {
+            links.push(parent_id + '.appendChild(before_' + tpl_id + ');');
+            links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
+          }
           accessors[variable[0]] = accessors[variable[0]] || [];
           if(instruction == 'if') {
             var if_arg = variable[0] + '_' + tpl;
@@ -300,7 +311,16 @@
       } else {
 	accessors_code.push(', {}');
       }
-      links.push('return [root' + accessors_code.join('') + '];');
+      var root = 'root';
+      if(root_children.length == 1) {
+        root = root_children[0];
+      } else {
+        declarations.unshift('var root = document.createDocumentFragment();');
+        for(var n in root_children) {
+          links.push('root.appendChild(' + root_children[n] + ');');
+        }
+      }
+      links.push('return [' + root + accessors_code.join('') + '];');
       return declarations.join('') + links.join('');
     }
 
