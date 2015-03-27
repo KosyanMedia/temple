@@ -1,12 +1,4 @@
 (function(context){
-  var set_all = function(tpl, data, pool) {
-    for(var k in data) {
-      if(tpl.hasOwnProperty(k)) {
-        tpl[k](data[k]);
-      }
-    }
-  };
-
   var render_template = function(before, after, template, data, pool){
     var parent = before.parentNode;
     while(before.nextSibling !== after) {//Loosing memory here
@@ -15,9 +7,8 @@
     var fragment = document.createDocumentFragment();
     for(var i = 0, l = data.length; i < l; i++) {
       var nested = pool.get(template);
+      nested[1].update(data[i]);
       fragment.appendChild(nested[0]);
-      var d = data[i];
-      set_all(nested[1], d, pool);
     }
     parent.insertBefore(fragment, after);
   };
@@ -65,7 +56,6 @@
             arr.push(templates[key](methods));
           }
         }
-        console.log(free);
       },
       get: function(template, data) {
         if(! busy.hasOwnProperty(template)) {
@@ -77,9 +67,9 @@
         } else {
           tor = templates[template](methods);
         }
-        //busy[template].push(tor); Do not loose memory :)
+        //busy[template].push(tor); //Do not loose memory :)
         if(data) {
-          set_all(tor[1], data, this);
+          tor[1].update(data);
         }
         return tor;
       }
@@ -90,5 +80,4 @@
   var container = typeof module !== "undefined" ? module.exports : (window.temple_utils = {});
   container.render_template = render_template;
   container.pool = pool;
-  container.set_all = set_all;
 }).call(this);

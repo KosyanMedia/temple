@@ -3,6 +3,6 @@ var template;
 if(process.argv.slice(-1)[0] === "-m"){
   template = temple(process.argv.slice(2, -1), true);
 } else {
-  template = temple(process.argv.slice(2));
+  template = temple(process.argv.slice(2), false, true);
 }
 console.log(template);

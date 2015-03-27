@@ -121,7 +121,13 @@
       function esc(s) {
         return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
       }
-
+      var variables = {};
+      var add_variable = function(name, type) {
+        if(!(name in variables)) {
+          variables[name] = [];
+        }
+        variables[name].push(type);
+      }
       var buff = [];
 
       var declarations = ['var root = document.createDocumentFragment();'],
@@ -141,6 +147,7 @@
   
             if(value_type == 'V') { // Variable
               var variable = split_var(value, pid);
+              add_variable(variable[0], 'text');
               var var_id = variable[3] + new_id() + '_text';
               declarations.push('var ' + var_id + ' = document.createTextNode("");');
               links.push(buff[0][1] + '.appendChild(' + var_id + ');');
@@ -165,6 +172,7 @@
                 parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
+                add_variable(variable[0], 'text');
                 var var_id = variable[3] + new_id() + '_var';
                 parts.push(var_id);
                 declarations.push('var ' + var_id + ' = "";');
@@ -192,6 +200,7 @@
 
             if(value_type == 'V') { // Variable
               var variable = split_var(value, pid);
+              add_variable(variable[0], 'attr');
               accessors[variable[0]] = accessors[variable[0]] || [];
               if(attr == 'value') {
                 accessors[variable[0]].push(pid + '.value = ' + variable[2] + '(value' + variable[1] + ')');
@@ -214,6 +223,7 @@
                 parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
+                add_variable(variable[0], 'attr');
                 var var_id = variable[3] + new_id() + '_var';
                 parts.push(var_id);
                 declarations.push('var ' + var_id + ' = "";');
@@ -252,6 +262,7 @@
           var variable = split_var(ins[2], parent_id), // Accessor key
               tpl = ins[3]; // Template to loop over
           var tpl_id = tpl + new_id();
+          add_variable(variable[0], 'key');
           declarations.push('var before_' + tpl_id + ' = document.createTextNode("");');
           declarations.push('var after_' + tpl_id + ' = document.createTextNode("");');
           links.push(parent_id + '.appendChild(before_' + tpl_id + ');');
@@ -270,7 +281,14 @@
       var accessors_code = [];
       if(Object.keys(accessors).length > 0) {
         accessors_code.push(', {');
-        accessors['update'] = ['temple_utils.set_all(this, value, pool)'];
+        accessors['update'] = [];
+        for(var key in variables) {
+          accessors['update'].push('t = value.' + key);
+          accessors['update'].push('if(typeof t !== \'undefined\') this.' + key + '(t)');
+        }
+        if(accessors['update'].length > 0) {
+          accessors['update'][0] = 'var ' + accessors['update'][0];
+        }
         for(var key in accessors) {
           accessors_code.push(key + ':function(value){' )
           accessors_code.push(accessors[key].join(';'));
