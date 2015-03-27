@@ -7,7 +7,8 @@
     var fragment = document.createDocumentFragment();
     for(var i = 0, l = data.length; i < l; i++) {
       var nested = pool.get(template);
-      nested[1].update(data[i]);
+      if('update' in nested[1])
+        nested[1].update(data[i]);
       fragment.appendChild(nested[0]);
     }
     parent.insertBefore(fragment, after);
