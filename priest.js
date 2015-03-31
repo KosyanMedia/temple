@@ -162,7 +162,7 @@
             var tid = new_id();
             var node_var_name = buff[0][1] + '_text' + tid;
             var attr_update_func = buff[0][1] + '_update' + tid;
-            links.unshift(buff[0][1] + '.appendChild(' + node_var_name + ');');
+            links.push(buff[0][1] + '.appendChild(' + node_var_name + ');');
             var parts = [];
             var const_parts = [];
             for(var j = 0, k = buff.length; j < k; j++) {
@@ -336,7 +336,7 @@
       }
       node(name, 'root', parser.parseFromString(template_string), collector);
     });
-    //console.log(templates);
+    //console.log(JSON.stringify(templates));
 
     var templates_code = [];
     for(var k in templates) {
