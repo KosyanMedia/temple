@@ -7,18 +7,19 @@
         parent.removeChild(before.nextSibling);
       }
       children = [];
-    }
-    for(var i = 0, l = children.length; i < l; i++) {
-      var child = children[i];
-      if('update' in child)
-        child.update(data[i]);
+    } else {
+      for(var i = 0, l = children.length; i < l; i++) {
+        var child = children[i];
+        if('update' in child)
+          child.update(data[i]);
+      }
     }
     if(children.length < data.length) {
       var fragment = document.createDocumentFragment();
-      while(children.length < data.length) {
+      for(var lb = children.length, ub = data.length; lb < ub; lb++) {
         var nested = pool.get(template);
         if('update' in nested[1])
-          nested[1].update(data[children.length]);
+          nested[1].update(data[lb]);
         fragment.appendChild(nested[0]);
         children.push(nested[1]);
       }
