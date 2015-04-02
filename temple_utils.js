@@ -1,17 +1,30 @@
 (function(context){
-  var render_template = function(before, after, template, data, pool){
+  var render_children = function(before, after, template, data, pool, children){
+    data = data || [];
     var parent = before.parentNode;
-    while(before.nextSibling !== after) {//Loosing memory here
-      parent.removeChild(before.nextSibling);
+    if(data.length < children.length) {
+      while(before.nextSibling !== after) {//Loosing memory here
+        parent.removeChild(before.nextSibling);
+      }
+      children = [];
     }
-    var fragment = document.createDocumentFragment();
-    for(var i = 0, l = data.length; i < l; i++) {
-      var nested = pool.get(template);
-      if('update' in nested[1])
-        nested[1].update(data[i]);
-      fragment.appendChild(nested[0]);
+    for(var i = 0, l = children.length; i < l; i++) {
+      var child = children[i];
+      if('update' in child)
+        child.update(data[i]);
     }
-    parent.insertBefore(fragment, after);
+    if(children.length < data.length) {
+      var fragment = document.createDocumentFragment();
+      while(children.length < data.length) {
+        var nested = pool.get(template);
+        if('update' in nested[1])
+          nested[1].update(data[children.length]);
+        fragment.appendChild(nested[0]);
+        children.push(nested[1]);
+      }
+      parent.insertBefore(fragment, after);
+    }
+    return children;
   };
 
   var pool = function(templates){
@@ -79,6 +92,6 @@
   };
 
   var container = typeof module !== "undefined" ? module.exports : (window.temple_utils = {});
-  container.render_template = render_template;
+  container.render_children = render_children;
   container.pool = pool;
 }).call(this);
