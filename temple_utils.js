@@ -1,36 +1,30 @@
 (function(context){
-  var render_children = function(before, after, template, data, pool, children){
+  var render_children = function(after, template, data, pool, children){
     data = data || [];
-    var parent = before.parentNode;
-    if(data.length < children.length) {
-      while(before.nextSibling !== after) {//Loosing memory here
-        parent.removeChild(before.nextSibling);
-      }
-      children = [];
-    } else {
-      for(var i = 0, l = children.length; i < l; i++) {
-        var child = children[i];
-        if('update' in child)
-          child.update(data[i]);
-      }
+    for(var i = children.length - data.length; i > 0; i--) {
+      children.pop().remove();
+    }
+    for(var i = children.length - 1; i >= 0; i--) {
+      children[i].update(data[i]);
     }
     if(children.length < data.length) {
       var fragment = document.createDocumentFragment();
       for(var lb = children.length, ub = data.length; lb < ub; lb++) {
-        var nested = pool.get(template);
-        if('update' in nested[1])
-          nested[1].update(data[lb]);
+        var nested = pool.get(template, data[lb]);
         fragment.appendChild(nested[0]);
         children.push(nested[1]);
       }
-      parent.insertBefore(fragment, after);
+      after.parentNode.insertBefore(fragment, after);
     }
-    return children;
   };
 
   var pool = function(templates){
     var busy = {};
     var free = {};
+    for(var keys = Object.keys(templates), i = keys.length - 1; i >= 0; i--) {
+      free[keys[i]] = [];
+      busy[keys[i]] = [];
+    }
     var methods = {
       info: function() {
         var tor = {free: {}, busy: {}}, bkeys = Object.keys(busy), fkeys = Object.keys(free);
@@ -48,9 +42,6 @@
         var keys = Object.keys(busy);
         for(var i = 0, l = keys.length; i < l; i++) {
           var key = keys[i];
-          if(! free.hasOwnProperty(key)) {
-            free[key] = [];
-          }
           free[key] = free[key].concat(busy[key]);
           busy[key] = [];
         }
@@ -59,29 +50,14 @@
         var keys = Object.keys(to_cache);
         for(var i = 0, l = keys.length; i < l; i++) {
           var key = keys[i];
-          var arr;
-          if(! free.hasOwnProperty(key)) {
-            arr = [];
-            free[key] =  arr;
-          } else {
-            arr = free[key];
-          }
-
+          var arr = free[key];
           for(var j = 0, k = to_cache[key]; j < k; j++) {
             arr.push(templates[key](methods));
           }
         }
       },
       get: function(template, data) {
-        if(! busy.hasOwnProperty(template)) {
-          busy[template] = [];
-        }
-        var tor;
-        if(free.hasOwnProperty(template) && free[template].length > 0) {
-          tor = free[template].pop();
-        } else {
-          tor = templates[template](methods);
-        }
+        var  tor = free[template].pop() || templates[template](methods);
         //busy[template].push(tor); //Do not loose memory :)
         if(data) {
           tor[1].update(data);

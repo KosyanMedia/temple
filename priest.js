@@ -122,6 +122,7 @@
         return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
       }
       var variables = {};
+      var root = 'root';
       var add_variable = function(name, type) {
         if(!(name in variables)) {
           variables[name] = [];
@@ -134,7 +135,7 @@
       //var declarations = ['var root = document.createDocumentFragment();'],
       var declarations = [],
           links = [], // Order is important here
-          accessors = {};
+          accessors = {remove: []};
 
       for(var i = 0, l = instructions.length; i < l; i++) {
         var ins = instructions[i],
@@ -152,19 +153,33 @@
               add_variable(variable[0], 'text');
               var var_id = variable[3] + new_id() + '_text';
               declarations.push('var ' + var_id + ' = document.createTextNode("");');
+              if(buff[0][1] == 'root') {
+                accessors.remove.push(var_id + '.remove()'); 
+              }
               links.push(buff[0][1] + '.appendChild(' + var_id + ');');
               accessors[variable[0]] = accessors[variable[0]] || [];
               accessors[variable[0]].push(var_id + '.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
             } else if(value_type == 'C') { // Constant
-              links.push(buff[0][1] + '.appendChild(document.createTextNode("' + esc(value) + '"));');
+              if(buff[0][1] == 'root') {
+                var var_id = 'text' + new_id();
+                declarations.push('var ' + var_id + ' = document.createTextNode("' + esc(value)+ '");');
+                root = var_id;
+                root_children.push('root.appendChild(' + var_id + ');');
+                accessors.remove.push(var_id + '.remove()');
+              } else {
+                links.push(buff[0][1] + '.appendChild(document.createTextNode("' + esc(value) + '"));');
+              }
             }
           } else {
             var tid = new_id();
             var node_var_name = buff[0][1] + '_text' + tid;
-            var attr_update_func = buff[0][1] + '_update' + tid;
             links.push(buff[0][1] + '.appendChild(' + node_var_name + ');');
+            if(buff[0][1] == 'root') {
+              accessors.remove.push(node_var_name + '.remove()'); 
+            }
             var parts = [];
             var const_parts = [];
+            var access_keys = [];
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
                   value_type = buff[j][2][0], // Variable or Constant
@@ -181,15 +196,18 @@
                 declarations.push('var ' + var_id + ' = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [];
 		accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
-                var update_func_call = attr_update_func + '()';
-                if(accessors[variable[0]].indexOf(update_func_call) >= 0) {
-                  accessors[variable[0]].splice(accessors[variable[0]].indexOf(update_func_call), 1);
-                }
-                accessors[variable[0]].push(update_func_call);
+                access_keys.push(variable[0]);
               }
             }
+            text_update_code = node_var_name + '.nodeValue = ' + parts.join(' + ');
+            while(access_keys.length) {
+              var v = access_keys.pop();
+              if(accessors[v].indexOf(text_update_code) >= 0) {
+                accessors[v].splice(accessors[v].indexOf(text_update_code), 1);
+              }
+              accessors[v].push(text_update_code);
+            }
             declarations.push('var ' + node_var_name + ' = document.createTextNode(' + const_parts.join('+').replace(/"\+"/g, "") + ');');
-            declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.nodeValue = ' + parts.join(' + ')+ ';};');
           }
           buff = [];
         }
@@ -214,8 +232,10 @@
               links.unshift(pid + '.setAttribute("' + attr + '", "' + esc(value) + '");');
             }
           } else {
+            var const_parts = [];
             var parts = [];
-            var attr_update_func = buff[0][1] + '_' + buff[0][2].replace(/-/g, '_') + '_update';
+            var node_var_name = buff[0][1];
+            var access_keys = [];
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
                   attr = buff[j][2],
@@ -224,6 +244,7 @@
 
               if(value_type == 'C') {
                 parts.push('"' + esc(value) + '"');
+                const_parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
                 add_variable(variable[0], 'attr');
@@ -232,20 +253,33 @@
                 declarations.push('var ' + var_id + ' = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [];
 		accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
-                var update_func_call = attr_update_func + '()';
-                if(accessors[variable[0]].indexOf(update_func_call) >= 0) {
-                  accessors[variable[0]].splice(accessors[variable[0]].indexOf(update_func_call), 1);
-                }
-                accessors[variable[0]].push(update_func_call);
+                access_keys.push(variable[0]);
               }
             }
-            var node_var_name = buff[0][1];
+            var attr_update_code;
+            var attr_set_code;
             if(buff[0][2] == 'value') {
+              attr_update_code =  node_var_name + '.value = ' + parts.join(' + ');
+              attr_set_code =  node_var_name + '.value = ' + const_parts.join(' + ');
+            } else {
+              attr_update_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join(' + ') + ')';
+              attr_set_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + const_parts.join(' + ') + ')';
+            }
+            while(access_keys.length > 0) {
+              var v = access_keys.pop();
+              if(accessors[v].indexOf(attr_update_code) >= 0) {
+                accessors[v].splice(accessors[v].indexOf(attr_update_code), 1);
+              }
+              accessors[v].push(attr_update_code);
+            }
+            declarations.push(attr_set_code + ';');
+
+            /*if(buff[0][2] == 'value') {
               declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.value = ' + parts.join(' + ')+ ';};');
             } else {
               declarations.push('var ' + attr_update_func + ' = function(){' + node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join(' + ') + ');};');
-            }
-            declarations.push(attr_update_func + '();');
+            }*/
+            //declarations.push(attr_update_func + '();');
             //console.log(declarations);
           }
           buff = [];
@@ -260,7 +294,9 @@
         } else if(instruction == 'link') {
           var node = ins[2];
           if(parent_id == 'root') {
-            root_children.push(node);
+            root_children.push(parent_id + '.appendChild(' + node + ');');
+            root = node;
+            accessors.remove.push(node + '.remove()');
           } else {
             links.push(parent_id + '.appendChild(' + node + ');');
           }
@@ -270,13 +306,12 @@
           var tpl_id = tpl + new_id();
           declarations.push('var child_' + tpl_id + ' = [];');
           add_variable(variable[0], 'key');
-          declarations.push('var before_' + tpl_id + ' = document.createTextNode("");');
           declarations.push('var after_' + tpl_id + ' = document.createTextNode("");');
           if(parent_id == 'root') {
-            root_children.push('before_' + tpl_id);
-            root_children.push('after_' + tpl_id);
+            root_children.push(parent_id + '.appendChild(after_' + tpl_id + ');');
+            accessors.remove.push('after_' + tpl_id + '.remove()');
+            accessors.remove.push('while(child_' + tpl_id + '.length) child_' + tpl_id + '.pop().remove()');
           } else {
-            links.push(parent_id + '.appendChild(before_' + tpl_id + ');');
             links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
           }
           accessors[variable[0]] = accessors[variable[0]] || [];
@@ -284,9 +319,9 @@
             var if_arg = variable[0] + '_' + tpl;
             accessors[variable[0]].push('var ' + if_arg + ' = ' + variable[2]+ ' (value' + variable[1] + ')');
             accessors[variable[0]].push(if_arg + ' = ' + if_arg + ' ? [' + if_arg +  '] : []');
-            accessors[variable[0]].push('child_' + tpl_id + ' = temple_utils.render_children(before_' + tpl_id + ', after_' + tpl_id + ', "' + tpl + '", ' +  if_arg + ', pool, child_' + tpl_id + ')');
+            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' +  if_arg + ', pool, child_' + tpl_id + ')');
           } else if(instruction == 'forall') {
-            accessors[variable[0]].push('child_' + tpl_id + ' = temple_utils.render_children(before_' + tpl_id + ', after_' + tpl_id + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + ')' + ', pool, child_' + tpl_id + ')');
+            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + ')' + ', pool, child_' + tpl_id + ')');
           }
         }
       }
@@ -312,13 +347,13 @@
       } else {
 	accessors_code.push(', {}');
       }
-      var root = 'root';
       if(root_children.length == 1) {
-        root = root_children[0];
+        accessors.remove.push(root + '.remove()');
       } else {
+        root = 'root';
         declarations.unshift('var root = document.createDocumentFragment();');
         for(var n in root_children) {
-          links.push('root.appendChild(' + root_children[n] + ');');
+          links.push(root_children[n]);
         }
       }
       links.push('return [' + root + accessors_code.join('') + '];');
