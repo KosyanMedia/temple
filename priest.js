@@ -154,7 +154,7 @@
               var var_id = variable[3] + new_id() + '_text';
               declarations.push('var ' + var_id + ' = document.createTextNode("");');
               if(buff[0][1] == 'root') {
-                accessors.remove.push(var_id + '.remove()'); 
+                accessors.remove.push(var_id + '.parentNode.removeChild(' + var_id + ');'); 
               }
               links.push(buff[0][1] + '.appendChild(' + var_id + ');');
               accessors[variable[0]] = accessors[variable[0]] || [];
@@ -165,7 +165,7 @@
                 declarations.push('var ' + var_id + ' = document.createTextNode("' + esc(value)+ '");');
                 root = var_id;
                 root_children.push('root.appendChild(' + var_id + ');');
-                accessors.remove.push(var_id + '.remove()');
+                accessors.remove.push(var_id + '.parentNode.removeChild(' + var_id + ');'); 
               } else {
                 links.push(buff[0][1] + '.appendChild(document.createTextNode("' + esc(value) + '"));');
               }
@@ -175,7 +175,7 @@
             var node_var_name = buff[0][1] + '_text' + tid;
             links.push(buff[0][1] + '.appendChild(' + node_var_name + ');');
             if(buff[0][1] == 'root') {
-              accessors.remove.push(node_var_name + '.remove()'); 
+              accessors.remove.push(node_var_name + '.parentNode.removeChild(' + node_var_name + ');'); 
             }
             var parts = [];
             var const_parts = [];
@@ -259,11 +259,11 @@
             var attr_update_code;
             var attr_set_code;
             if(buff[0][2] == 'value') {
-              attr_update_code =  node_var_name + '.value = ' + parts.join(' + ');
-              attr_set_code =  node_var_name + '.value = ' + const_parts.join(' + ');
+              attr_update_code =  node_var_name + '.value = ' + parts.join('+');
+              attr_set_code =  node_var_name + '.value = ' + const_parts.join(' + ').replace(/"\+"/g, "");
             } else {
-              attr_update_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join(' + ') + ')';
-              attr_set_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + const_parts.join(' + ') + ')';
+              attr_update_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join('+') + ')';
+              attr_set_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + const_parts.join('+').replace(/"\+"/g, "") + ')';
             }
             while(access_keys.length > 0) {
               var v = access_keys.pop();
@@ -296,7 +296,7 @@
           if(parent_id == 'root') {
             root_children.push(parent_id + '.appendChild(' + node + ');');
             root = node;
-            accessors.remove.push(node + '.remove()');
+            accessors.remove.push(node + '.parentNode.removeChild(' + node + ');'); 
           } else {
             links.push(parent_id + '.appendChild(' + node + ');');
           }
@@ -309,7 +309,7 @@
           declarations.push('var after_' + tpl_id + ' = document.createTextNode("");');
           if(parent_id == 'root') {
             root_children.push(parent_id + '.appendChild(after_' + tpl_id + ');');
-            accessors.remove.push('after_' + tpl_id + '.remove()');
+            accessors.remove.push('after_' + tpl_id + '.parentNode.removeChild(after_' + tpl_id + ');');
             accessors.remove.push('while(child_' + tpl_id + '.length) child_' + tpl_id + '.pop().remove()');
           } else {
             links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
