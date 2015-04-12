@@ -327,7 +327,7 @@
       }
       var accessors_code = [];
       if(Object.keys(accessors).length > 0) {
-        accessors_code.push(', {');
+        accessors_code.push('{');
         accessors['update'] = [];
         for(var key in variables) {
           accessors['update'].push('t = value.' + key);
@@ -343,9 +343,6 @@
           accessors_code.push(',');
         }
         accessors_code.pop();
-	accessors_code.push('}');
-      } else {
-	accessors_code.push(', {}');
       }
       if(root_children.length == 1) {
         accessors.remove.push(root + '.remove()');
@@ -356,7 +353,12 @@
           links.push(root_children[n]);
         }
       }
-      links.push('return [' + root + accessors_code.join('') + '];');
+      accessors_code.push(',');
+      accessors_code.push('root: function(){');
+      accessors_code.push(' return ' + root + ';');
+      accessors_code.push('}');
+      accessors_code.push('}');
+      links.push('return' + accessors_code.join('') + ';');
       return declarations.join('') + links.join('');
     }
 

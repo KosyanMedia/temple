@@ -11,8 +11,8 @@
       var fragment = document.createDocumentFragment();
       for(var lb = children.length, ub = data.length; lb < ub; lb++) {
         var nested = pool.get(template, data[lb]);
-        fragment.appendChild(nested[0]);
-        children.push(nested[1]);
+        fragment.appendChild(nested.root());
+        children.push(nested);
       }
       after.parentNode.insertBefore(fragment, after);
     }
@@ -60,7 +60,7 @@
         var  tor = free[template].pop() || templates[template](methods);
         //busy[template].push(tor); //Do not loose memory :)
         if(data) {
-          tor[1].update(data);
+          tor.update(data);
         }
         return tor;
       }

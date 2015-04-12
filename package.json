@@ -1,10 +1,14 @@
 {
   "name": "temple",
-  "description": "",
-  "version": "0.1.0",
+  "description": "Template engine with unique Extra-Virgin-Single-Pass™ compiler technology",
+  "version": "0.1.1",
   "author": "Boris Kaplunovsky",
   "main": "./priest.js",
   "dependencies": {
     "xmldom": "^0.1.19"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:KosyanMedia/temple.git"
   }
 }
