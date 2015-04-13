@@ -38,7 +38,6 @@
       },
       release: function(template, instance) {
         free[template].push(instance);
-        console.log(free[template].length,  '<<' + template);
       },
       build_cache: function(to_cache) {
         var keys = Object.keys(to_cache);
