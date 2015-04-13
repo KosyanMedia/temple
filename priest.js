@@ -185,6 +185,11 @@
             var parts = [];
             var const_parts = [];
             var access_keys = [];
+            var vars_count = 0;
+            for(var j = 0, k = buff.length; j < k; j++) {
+              if(buff[j][2][0] == 'V')
+                vars_count++;
+            }
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
                   value_type = buff[j][2][0], // Variable or Constant
@@ -195,13 +200,17 @@
                 const_parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
-                add_variable(variable[0], 'text');
-                var var_id = variable[3] + new_id() + '_var';
-                parts.push(var_id);
-                declarations.push('var ' + var_id + ' = "";');
                 accessors[variable[0]] = accessors[variable[0]] || [];
-		accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
+                var var_id = variable[3] + new_id() + '_var';
+                add_variable(variable[0], 'text');
                 access_keys.push(variable[0]);
+                if(vars_count > 1) {
+                  parts.push(var_id);
+                  declarations.push('var ' + var_id + ' = "";');
+                  accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
+                } else {
+                  parts.push(variable[2] + '(value' + variable[1] + ')');
+                }
               }
             }
             text_update_code = node_var_name + '.nodeValue = ' + parts.join(' + ');
@@ -241,6 +250,11 @@
             var parts = [];
             var node_var_name = buff[0][1];
             var access_keys = [];
+            var vars_count = 0;
+            for(var j = 0, k = buff.length; j < k; j++) {
+              if(buff[j][3][0] == 'V')
+                vars_count++;
+            }
             for(var j = 0, k = buff.length; j < k; j++) {
               var pid = buff[j][1],
                   attr = buff[j][2],
@@ -252,13 +266,17 @@
                 const_parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
-                add_variable(variable[0], 'attr');
                 var var_id = variable[3] + new_id() + '_var';
-                parts.push(var_id);
-                declarations.push('var ' + var_id + ' = "";');
-                accessors[variable[0]] = accessors[variable[0]] || [];
-		accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
                 access_keys.push(variable[0]);
+                add_variable(variable[0], 'attr');
+                accessors[variable[0]] = accessors[variable[0]] || [];
+                if(vars_count > 1) {
+                  parts.push(var_id);
+                  declarations.push('var ' + var_id + ' = "";');
+                  accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
+                } else {
+                  parts.push(variable[2] + '(value' + variable[1] + ')');
+                }
               }
             }
             var attr_update_code;
