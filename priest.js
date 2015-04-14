@@ -201,7 +201,7 @@
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
                 accessors[variable[0]] = accessors[variable[0]] || [];
-                var var_id = variable[3] + new_id() + '_var';
+                var var_id = variable[0] + new_id() + '_var';
                 add_variable(variable[0], 'text');
                 access_keys.push(variable[0]);
                 if(vars_count > 1) {
@@ -266,7 +266,7 @@
                 const_parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
                 var variable = split_var(value, pid);
-                var var_id = variable[3] + new_id() + '_var';
+                var var_id = variable[0] + new_id() + '_var';
                 access_keys.push(variable[0]);
                 add_variable(variable[0], 'attr');
                 accessors[variable[0]] = accessors[variable[0]] || [];
@@ -286,7 +286,7 @@
               attr_set_code =  node_var_name + '.value = ' + const_parts.join(' + ').replace(/"\+"/g, "");
             } else {
               attr_update_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join('+') + ')';
-              if(buff[0][2] != 'src') {
+              if(buff[0][2] != 'src' && buff[0][2] != 'href') {
                 attr_set_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + const_parts.join('+').replace(/"\+"/g, "") + ')';
               }
             }
@@ -334,12 +334,9 @@
           }
           accessors[variable[0]] = accessors[variable[0]] || [];
           if(instruction == 'if') {
-            var if_arg = variable[0] + '_' + tpl;
-            accessors[variable[0]].push('var ' + if_arg + ' = ' + variable[2]+ ' (value' + variable[1] + ')');
-            accessors[variable[0]].push(if_arg + ' = ' + if_arg + ' ? [' + if_arg +  '] : []');
-            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' +  if_arg + ', pool, child_' + tpl_id + ')');
+            accessors[variable[0]].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", ' + variable[2]+ ' (value' + variable[1] + '), pool, child_' + tpl_id + ')');
           } else if(instruction == 'forall') {
-            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + ')' + ', pool, child_' + tpl_id + ')');
+            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + '), pool, child_' + tpl_id + ')');
           }
         }
       }
@@ -355,7 +352,11 @@
           accessors['update'][0] = 'var ' + accessors['update'][0];
         }
         for(var key in accessors) {
-          accessors_code.push(key + ':function(value){' )
+          if(key == 'remove' || key == 'root') {
+            accessors_code.push(key + ':function(){' );
+          } else {
+            accessors_code.push(key + ':function(value){' );
+          }
           accessors_code.push(accessors[key].join(';'));
           accessors_code.push('}');
           accessors_code.push(',');

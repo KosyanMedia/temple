@@ -21,6 +21,10 @@
     }
   };
 
+  var render_child = function(after, template, data, pool, children){
+    render_children(after, template, data ? [data] : [], pool, children);
+  };
+
   var pool = function(templates){
     var busy = {};
     var free = {};
@@ -65,5 +69,6 @@
 
   var container = typeof module !== "undefined" ? module.exports : (window.temple_utils = {});
   container.render_children = render_children;
+  container.render_child = render_child;
   container.pool = pool;
 }).call(this);
