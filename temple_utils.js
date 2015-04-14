@@ -4,7 +4,6 @@
     for(var i = children.length - data.length; i > 0; i--) {
       var saved = children.pop();
       pool.release(template, saved);
-      saved.remove();
     }
     for(var i = children.length - 1; i >= 0; i--) {
       children[i].update(data[i]);
@@ -41,6 +40,7 @@
         return tor;
       },
       release: function(template, instance) {
+        instance.remove();
         free[template].push(instance);
       },
       build_cache: function(to_cache) {

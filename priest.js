@@ -328,7 +328,7 @@
           if(parent_id == 'root') {
             root_children.push(parent_id + '.appendChild(after_' + tpl_id + ');');
             accessors.remove.push('after_' + tpl_id + '.parentNode.removeChild(after_' + tpl_id + ');');
-            accessors.remove.unshift('while(child_' + tpl_id + '.length) child_' + tpl_id + '.pop().remove()');
+            accessors.remove.unshift('while(child_' + tpl_id + '.length) pool.release("' + tpl + '", child_' + tpl_id + '.pop());');
           } else {
             links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
           }
