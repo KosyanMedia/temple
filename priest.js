@@ -237,8 +237,8 @@
               var variable = split_var(value, pid);
               add_variable(variable[0], 'attr');
               accessors[variable[0]] = accessors[variable[0]] || [];
-              if(attr == 'value') {
-                accessors[variable[0]].push(pid + '.value = ' + variable[2] + '(value' + variable[1] + ')');
+              if(attr == 'value' || attr == 'checked') {
+                accessors[variable[0]].push(pid + '.' + attr + ' = ' + variable[2] + '(value' + variable[1] + ')');
               } else {
                 accessors[variable[0]].push(pid + '.setAttribute("' + attr + '", ' + variable[2] + '(value' + variable[1] + '))');
               }
@@ -281,9 +281,9 @@
             }
             var attr_update_code;
             var attr_set_code = false;
-            if(buff[0][2] == 'value') {
-              attr_update_code =  node_var_name + '.value = ' + parts.join('+');
-              attr_set_code =  node_var_name + '.value = ' + const_parts.join(' + ').replace(/"\+"/g, "");
+            if(buff[0][2] == 'value' || buff[0][2] == 'checked') {
+              attr_update_code =  node_var_name + '.' + buff[0][2] + ' = ' + parts.join('+');
+              attr_set_code =  node_var_name + '.' + buff[0][2] + ' = ' + const_parts.join(' + ').replace(/"\+"/g, "");
             } else {
               attr_update_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join('+') + ')';
               if(buff[0][2] != 'src' && buff[0][2] != 'href') {
