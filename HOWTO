@@ -4,8 +4,8 @@ Build js code:
     node cli.js examples/*temple > templates.js # Dump into templates.js
 
 Use:
-    Load scripts [utils.js, templates.js]
-    Or `cat templates.js utils.js > res.js` and paste it into chrome console
+    Load scripts [temple_utils.js, templates.js]
+    Or `cat templates.js temple_utils.js > res.js` and paste it into chrome console
     console.log(JSON.stringify(window.templates_pool.info())); # pool is empty
     var t = window.templates_pool.get("ss"); # Load empty ss template
     console.log(JSON.stringify(window.templates_pool.info())); # pool has one busy ss item 
