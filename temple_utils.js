@@ -2,8 +2,7 @@
   var render_children = function(after, template, data, pool, children){
     data = data || [];
     for(var i = children.length - data.length; i > 0; i--) {
-      var saved = children.pop();
-      pool.release(template, saved);
+      pool.release(template, children.pop());
     }
     for(var i = children.length - 1; i >= 0; i--) {
       children[i].update(data[i]);
@@ -25,7 +24,6 @@
   };
 
   var pool = function(templates){
-    var busy = {};
     var free = {};
     for(var keys = Object.keys(templates), i = keys.length - 1; i >= 0; i--) {
       free[keys[i]] = [];
