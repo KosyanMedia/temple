@@ -3,3 +3,5 @@
 - Do not create text node between divs DONE
 - Implement automatic garbage collection DONE
 - Somehow give access to external variables /NOT SURE NECESSARY|POSSIBLE THROUGH FILTERS/
+- Create tutorial
+- Create docs
