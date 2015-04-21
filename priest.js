@@ -34,8 +34,6 @@
       node(name, 'root', parser.parseFromString(template_string), collector);
     });
 
- 
- 
     var templates_code = [];
     for(var k in templates) {
       if(templates[k].length > 1) //Ignore stop instruction

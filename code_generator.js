@@ -149,13 +149,21 @@
               var variable = split_var(value, pid);
               add_variable(variable[0], 'attr');
               accessors[variable[0]] = accessors[variable[0]] || [];
-              if(attr == 'value' || attr == 'checked') {
+              if(attr == 'value' || attr == 'checked' || attr == 'id') {
                 accessors[variable[0]].push(pid + '.' + attr + ' = ' + variable[2] + '(value' + variable[1] + ')');
+              } else if(attr == 'class') {
+                accessors[variable[0]].push(pid + '.' + attr + 'Name = ' + variable[2] + '(value' + variable[1] + ')');
               } else {
                 accessors[variable[0]].push(pid + '.setAttribute("' + attr + '", ' + variable[2] + '(value' + variable[1] + '))');
               }
             } else if(value_type == 'C') { // Constant
-              links.unshift(pid + '.setAttribute("' + attr + '", "' + esc(value) + '");');
+              if(attr == 'value' || attr == 'checked' || attr == 'id') {
+                links.unshift(pid + '.' + attr + ' = "' + esc(value) + '";');
+              } else if(attr == 'class') {
+                links.unshift(pid + '.className = "' + esc(value) + '";');
+              } else {
+                links.unshift(pid + '.setAttribute("' + attr + '", "' + esc(value) + '");');
+              }
             }
           } else {
             var const_parts = [];
@@ -193,9 +201,12 @@
             }
             var attr_update_code;
             var attr_set_code = false;
-            if(buff[0][2] == 'value' || buff[0][2] == 'checked') {
+            if(buff[0][2] == 'value' || buff[0][2] == 'checked' || buff[0][2] == 'id') {
               attr_update_code =  node_var_name + '.' + buff[0][2] + ' = ' + parts.join('+');
               attr_set_code =  node_var_name + '.' + buff[0][2] + ' = ' + const_parts.join(' + ').replace(/"\+"/g, "");
+            } else if(buff[0][2] == 'class') {
+              attr_update_code =  node_var_name + '.' + buff[0][2] + 'Name = ' + parts.join('+');
+              attr_set_code =  node_var_name + '.' + buff[0][2] + 'Name = ' + const_parts.join(' + ').replace(/"\+"/g, "");
             } else {
               attr_update_code =  node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join('+') + ')';
               if(buff[0][2] != 'src' && buff[0][2] != 'href') {
@@ -210,7 +221,7 @@
               accessors[v].push(attr_update_code);
             }
             if(attr_set_code != false)
-              declarations.push(attr_set_code + ';');
+              links.push(attr_set_code + ';');
           }
           buff = [];
         }
@@ -258,7 +269,7 @@
         accessors['update'] = [];
         for(var key in variables) {
           accessors['update'].push('t = value.' + key);
-          accessors['update'].push('if(typeof t !== \'undefined\') this.' + key + '(t)');
+          accessors['update'].push('if(undefined !== t) this.' + key + '(t)');
         }
         if(accessors['update'].length > 0) {
           accessors['update'][0] = 'var ' + accessors['update'][0];
