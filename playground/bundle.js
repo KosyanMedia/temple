@@ -14546,28 +14546,33 @@ document.addEventListener('DOMContentLoaded', function () {
   var eval_code_results_container = document.getElementById('eval_code_results_container');
 
   var template_cm = CodeMirror.fromTextArea(textarea, {
-    lineNumbers: true,
     mode: "htmlmixed"
   });
+
+
   var demo_data_cm = CodeMirror.fromTextArea(demo_data, {
-    lineNumbers: true,
     mode: "javascript"
   });
   var result = document.getElementById('result');
+  var template_compiled_code_container = CodeMirror(result, {
+    mode: "javascript"
+  });
+
+  var eval_code_results_container_cm = CodeMirror(eval_code_results_container, {
+    mode: "htmlmixed"
+  });
+
   document.getElementById('generate').addEventListener('click', function () {
     var template = temple({'foo.temple': template_cm.getValue()}, as_module.checked, drop_spaces.checked);
     if (eval_code.checked) {
       eval(template);
       var template_obj = window.templates.get('foo', JSON.parse(demo_data_cm.getValue()));
-      CodeMirror(eval_code_results_container, {
-        value: beautify_html(template_obj[0].outerHTML),
-        mode: "javascript"
-      });
+      eval_code_results_container_cm.setValue(beautify_html(template_obj[0].outerHTML));
+    } else {
+      eval_code_results_container_cm.setValue('');
     }
-    CodeMirror(result, {
-      value: beautify_js(template),
-      mode: "javascript"
-    });
+
+    template_compiled_code_container.setValue(beautify_js(template));
   });
 });
 
