@@ -14559,13 +14559,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (eval_code.checked) {
       eval(template);
       var template_obj = window.templates.get('foo', JSON.parse(demo_data_cm.getValue()));
-
       CodeMirror(eval_code_results_container, {
         value: beautify_html(template_obj[0].outerHTML),
         mode: "javascript"
       });
     }
-    //result.innerText = beautify_js(template);
     CodeMirror(result, {
       value: beautify_js(template),
       mode: "javascript"
