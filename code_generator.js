@@ -153,7 +153,7 @@
               var variable = split_var(value, pid);
               add_variable(variable[0], 'attr');
               accessors[variable[0]] = accessors[variable[0]] || [];
-              if(attr == 'value' || attr == 'checked' || attr == 'id') {
+              if(attr == 'value' || attr == 'checked' || attr == 'id' || attr == 'selected') {
                 accessors[variable[0]].push(pid + '.' + attr + ' = ' + getter('a', variable));
               } else if(attr == 'class') {
                 accessors[variable[0]].push(pid + '.' + attr + 'Name = ' + getter('a', variable));
@@ -205,7 +205,7 @@
             }
             var attr_update_code;
             var attr_set_code = false;
-            if(buff[0][2] == 'value' || buff[0][2] == 'checked' || buff[0][2] == 'id') {
+            if(buff[0][2] == 'value' || buff[0][2] == 'checked' || buff[0][2] == 'id' || buff[0][2] == 'selected') {
               attr_update_code =  node_var_name + '.' + buff[0][2] + ' = ' + parts.join('+');
               attr_set_code =  node_var_name + '.' + buff[0][2] + ' = ' + const_parts.join(' + ').replace(/"\+"/g, "");
             } else if(buff[0][2] == 'class') {
