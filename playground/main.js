@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('generate').addEventListener('click', function () {
     var template = temple({'foo.temple': template_cm.getValue()}, as_module.checked, drop_spaces.checked);
     if (eval_code.checked) {
-      eval(template);
+      eval(temple({'foo.temple': template_cm.getValue()}, false, drop_spaces.checked));
       var template_obj = window.templates.get('foo', JSON.parse(demo_data_cm.getValue()));
       eval_code_results_container_cm.setValue(beautify_html(template_obj[0].outerHTML));
     } else {
