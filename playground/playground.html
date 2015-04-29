@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="bundle.js"></script>
+    <link rel="stylesheet" href="../node_modules/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<div class="left">
+    <label for="drop_spaces">drop spaces</label>
+    <input checked="checked" type="checkbox" id="drop_spaces" />
+    <label for="as_module">as module</label>
+    <input type="checkbox" id="as_module" />
+    <label for="eval_code">eval</label>
+    <input checked="checked" type="checkbox" id="eval_code" />
+
+    <button id="generate">generate</button>
+    <label for="code">template code</label>
+    <textarea id="code" cols="20" rows="5">
+        <div>
+            <if key="plane">
+                Flight number: {{airline}} {{number}}
+            </if>
+            <if key="train">
+                Train number: {{number}}
+            </if>
+        </div>
+    </textarea>
+    <textarea id="demo_data" cols="20" rows="5">
+        {
+            "plane": {
+                "airline": "Aeroflot",
+                "number": "EK1273"
+            },
+            "train": false
+        }
+    </textarea>
+    <div id="eval_code_results_container"></div>
+
+</div>
+
+<div class="right">
+    <pre id="result"></pre>
+</div>
+</body>
+
+</html>

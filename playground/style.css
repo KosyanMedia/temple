@@ -1,0 +1,18 @@
+.CodeMirror {
+    height: 150px;
+}
+#result .CodeMirror {
+    height: 100%;
+}
+
+.left, .right {
+    width: 50%;
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
