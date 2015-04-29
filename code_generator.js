@@ -30,6 +30,10 @@
       return tor;
     }
 
+    function getter(n, v) {
+      return v[2] ? v[2] + '(' + n + v[1] + ')' : n + v[1];
+    }
+
     module.exports = function(instructions) {//Single-pass translator enchanted with buffered optimizations!
       function esc(s) {
         return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
@@ -72,7 +76,7 @@
                 links.push(buff[0][1] + '.appendChild(' + var_id + ');');
               }
               accessors[variable[0]] = accessors[variable[0]] || [];
-              accessors[variable[0]].push(var_id + '.nodeValue = ' + variable[2] + ' (value' + variable[1] + ')');
+              accessors[variable[0]].push(var_id + '.nodeValue = ' + getter('a', variable));
             } else if(value_type == 'C') { // Constant
               if(buff[0][1] == 'root') {
                 var node_var_name = 'root_text' + new_id();
@@ -119,13 +123,13 @@
                 if(vars_count > 1) {
                   parts.push(var_id);
                   declarations.push(var_id + ' = ""');
-                  accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
+                  accessors[variable[0]].push(var_id + ' = ' + getter('a', variable));
                 } else {
-                  parts.push(variable[2] + '(value' + variable[1] + ')');
+                  parts.push(getter('a', variable));
                 }
               }
             }
-            text_update_code = node_var_name + '.nodeValue = ' + parts.join(' + ');
+            text_update_code = node_var_name + '.nodeValue = ' + parts.join('+');
             while(access_keys.length) {
               var v = access_keys.pop();
               if(accessors[v].indexOf(text_update_code) >= 0) {
@@ -150,11 +154,11 @@
               add_variable(variable[0], 'attr');
               accessors[variable[0]] = accessors[variable[0]] || [];
               if(attr == 'value' || attr == 'checked' || attr == 'id') {
-                accessors[variable[0]].push(pid + '.' + attr + ' = ' + variable[2] + '(value' + variable[1] + ')');
+                accessors[variable[0]].push(pid + '.' + attr + ' = ' + getter('a', variable));
               } else if(attr == 'class') {
-                accessors[variable[0]].push(pid + '.' + attr + 'Name = ' + variable[2] + '(value' + variable[1] + ')');
+                accessors[variable[0]].push(pid + '.' + attr + 'Name = ' + getter('a', variable));
               } else {
-                accessors[variable[0]].push(pid + '.setAttribute("' + attr + '", ' + variable[2] + '(value' + variable[1] + '))');
+                accessors[variable[0]].push(pid + '.setAttribute("' + attr + '", ' + getter('a', variable) + ')');
               }
             } else if(value_type == 'C') { // Constant
               if(attr == 'value' || attr == 'checked' || attr == 'id') {
@@ -193,9 +197,9 @@
                 if(vars_count > 1) {
                   parts.push(var_id);
                   declarations.push(var_id + ' = ""');
-                  accessors[variable[0]].push(var_id + ' = ' + variable[2] + '(value' + variable[1] + ')');
+                  accessors[variable[0]].push(var_id + ' = ' + getter('a', variable));
                 } else {
-                  parts.push(variable[2] + '(value' + variable[1] + ')');
+                  parts.push(getter('a', variable));
                 }
               }
             }
@@ -257,9 +261,9 @@
           }
           accessors[variable[0]] = accessors[variable[0]] || [];
           if(instruction == 'if') {
-            accessors[variable[0]].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", ' + variable[2]+ ' (value' + variable[1] + '), pool, child_' + tpl_id + ')');
+            accessors[variable[0]].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
           } else if(instruction == 'forall') {
-            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + variable[2] + ' (value' + variable[1] + '), pool, child_' + tpl_id + ')');
+            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
           }
         }
       }
@@ -268,7 +272,7 @@
         accessors_code.push('{');
         accessors['update'] = [];
         for(var key in variables) {
-          accessors['update'].push('t = value.' + key);
+          accessors['update'].push('t = a.' + key);
           accessors['update'].push('if(undefined !== t) this.' + key + '(t)');
         }
         if(accessors['update'].length > 0) {
@@ -278,7 +282,7 @@
           if(key == 'remove' || key == 'root') {
             accessors_code.push(key + ':function(){' );
           } else {
-            accessors_code.push(key + ':function(value){' );
+            accessors_code.push(key + ':function(a){' );
           }
           accessors_code.push(accessors[key].join(';'));
           accessors_code.push('}');
