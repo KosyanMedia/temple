@@ -5,8 +5,10 @@
   "author": "Boris Kaplunovsky",
   "main": "./priest.js",
   "dependencies": {
-    "codemirror": "^5.2.0",
-    "js-beautify": "^1.5.5",
     "madlib-xmldom": "^0.1.3"
+  },
+  "devDependencies": {
+    "codemirror": "^5.2.0",
+    "js-beautify": "^1.5.5"
   }
 }
