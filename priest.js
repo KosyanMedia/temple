@@ -12,7 +12,7 @@
   }
   module.exports = function(templates_files, as_module, drop_spaces /*> <*/){
     if(!is_object(templates_files)){
-      
+
     }
     //if(!(templates_files instanceof Array)){
     //  templates_files = [templates_files];

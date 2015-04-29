@@ -14532,6 +14532,7 @@ if (typeof define === "function" && define.amd) {
 window.temple_utils = require('../temple_utils');
 var temple = require('../priest');
 var beautify_js = require('js-beautify');
+var beautify_html = require('js-beautify').html;
 require('codemirror/mode/htmlmixed/htmlmixed');
 require('codemirror/mode/javascript/javascript');
 var CodeMirror = require('codemirror');
@@ -14558,8 +14559,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (eval_code.checked) {
       eval(template);
       var template_obj = window.templates.get('foo', JSON.parse(demo_data_cm.getValue()));
-      eval_code_results_container.innerHTML = '';
-      eval_code_results_container.appendChild(template_obj[0]);
+
+      CodeMirror(eval_code_results_container, {
+        value: beautify_html(template_obj[0].outerHTML),
+        mode: "javascript"
+      });
     }
     //result.innerText = beautify_js(template);
     CodeMirror(result, {
@@ -14575,8 +14579,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var node = require('./xml2instructions');
   var builder = require('./code_generator');
-
+  function is_object( mixed_var ){
+    if(mixed_var instanceof Array) {
+      return false;
+    } else {
+      return (mixed_var !== null) && (typeof( mixed_var ) == 'object');
+    }
+  }
   module.exports = function(templates_files, as_module, drop_spaces /*> <*/){
+    if(!is_object(templates_files)){
+
+    }
     //if(!(templates_files instanceof Array)){
     //  templates_files = [templates_files];
     //}
