@@ -11,8 +11,8 @@ See [examples](examples/)
 
 Build examples:
 ```bash
-node cli.js examples/*temple # Dump on stdout
-node cli.js examples/*temple > templates.js # Dump into templates.js
+node ./bin/temple examples/*temple # Dump on stdout
+node ./bin/temple examples/*temple > templates.js # Dump into templates.js
 ```
 
 ### Use
@@ -33,3 +33,127 @@ window.templates_pool.build_cache({"ss": 100}); # build 100 elements cache for s
 console.log(JSON.stringify(window.templates_pool.info())); # fresh new 100 ss items ready for action
 console.log(t[0]);
 ```
+
+### Using instruction for browser env
+#### 1. Write temple file
+For example, your template file `my_template.temple` looks like:
+```xml
+<div id="{{id}}">
+  {{name}}
+</div>
+```
+
+#### 2. Compile
+Build temple functions from template:
+```bash
+node path/to/temple/bin/temple my_template.temple > templates.js
+```
+
+#### 3. Include template
+Also don't forget include `temple_utils.js`to your page, head section must look like:
+```html
+<script src="temple_utils.js"></script>
+<script src="templates.js"></script>
+```
+After that you'll have `templates` variable with all your templates and temple manipulations methods.
+Templates named by filename, for example you get `templates.get('my_template')`.
+
+#### 4. Fill template by data
+For example, you want render simple information:
+```js
+data = {
+  "id": 1,
+  "name": "John"
+}
+```
+Don't forget that json must be valid, you can try [validator](http://jsonlint.com/) first.
+And finnaly pass data to your template:
+```js
+myTemplate = templates.get('my_template', data);
+```
+or
+```js
+pool = templates.get('my_template')[1];
+myTemplate = pool.update(data);
+```
+Variable `myTemplate` its array with `[0]` DOM template and `[1]` temple methods for template.
+
+#### 5. Append template to DOM
+
+```js
+div = document.getElementById('place-for-append')
+div.appendChild(myTemplate[0])
+```
+
+### Syntax
+Temple templates are valid XML-tree:
+```xml
+<div id="{{id}}">
+  {{name}}
+</div>
+```
+
+Also you can use `forall` instruction for render each item of array:
+```xml
+<ul>
+  <forall key="items">
+    <li>{{value}}</li>
+  </forall>
+</ul>
+```
+
+And use `if` for simple conditions:
+```xml
+<div>
+  <if key="plane">
+    Flight number: {{airline}} {{number}}
+  </if>
+  <if key="train">
+    Train number: {{number}}
+  </if>
+</div>
+```
+
+### Methods
+
+### .info()
+
+### .get(template_name)
+```js
+myTemplate = templates.get('my_template');
+```
+
+### .get(template_name, data)
+```js
+myTemplate = templates.get('my_template', {data: data});
+```
+
+### .update(data)
+
+### .build_cache({template_name: num_of_copy})
+```js
+templates.info().free
+templates.build_cache({‘my_template’: 1000})
+templates.info().free
+```
+
+### .remove()
+### .root()
+Return DOM element
+
+### .child_template_name()
+Temple provide setters for child template, for template `my_template`
+```xml
+<ul>
+  <forall key="items">
+    <li>{{data}}</li>
+  </forall>
+</ul>
+```
+You'll have
+```js
+myTemplate = templates.get('my_template')[1]
+myTemplate.items([{"data": "some data"}, {"data": "some data2"}])
+```
+
+

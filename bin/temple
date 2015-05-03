@@ -29,8 +29,8 @@ args.forEach(function(arg){
 });
 
 if (options.help || !files.length) {
-  console.log("Usage: cli.js template.temple [template2.temple ...] [options]");
-  console.log("       cli.js template.temple -m\n");
+  console.log("Usage: temple template.temple [template2.temple ...] [options]");
+  console.log("       temple template.temple -m\n");
   console.log("Options:");
   console.log("  -m, --as-module     build as module");
   console.log("  -d, --drop-spaces   result without spaces");
