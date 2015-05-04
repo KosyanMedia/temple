@@ -4,6 +4,9 @@
   "version": "0.1.1",
   "author": "Boris Kaplunovsky",
   "main": "./priest.js",
+  "bin": {
+    "temple": "cli.js"
+  },
   "dependencies": {
     "xmldom": "^0.1.19"
   }
