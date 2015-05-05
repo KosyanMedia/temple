@@ -1,17 +1,39 @@
 #!/usr/bin/env node
 var temple = require('./../priest');
-var template;
 var args = process.argv.slice(2);
-if(args.length == 0 || args.indexOf('-h') != -1 || args.indexOf('--help') != -1) {
+var options = {
+  as_module: false,
+  drop_spaces: false,
+  help: false
+};
+var files = [];
+
+args.forEach(function(arg){
+  switch (arg) {
+    case '-m':
+    case '--as-module':
+      options.as_module = true;
+      break;
+    case '-d':
+    case '--drop-spaces':
+      options.drop_spaces = true;
+      break;
+    case '-h':
+    case '--help':
+      options.help = true;
+      break;
+    default:
+      files.push(arg);
+      break
+  }
+});
+
+if (options.help || !files.length) {
   console.log("Usage: cli.js [ template.temple ] [arguments]");
   console.log("       cli.js template.temple -m\n");
   console.log("Arguments:");
-  console.log("  -m   build as module")
+  console.log("  -m   build as module");
 } else {
-  if(args.indexOf('-m') != -1) {
-    template = temple(args.slice(0, -1), true);
-  } else {
-    template = temple(args, false, true);
-  }
+  var template = temple(files, options.as_module, options.drop_spaces);
   console.log(template);
 }
