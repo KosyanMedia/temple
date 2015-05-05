@@ -5,7 +5,7 @@
   "author": "Boris Kaplunovsky",
   "main": "./priest.js",
   "bin": {
-    "temple": "cli.js"
+    "temple": "./bin/temple"
   },
   "dependencies": {
     "xmldom": "^0.1.19"
