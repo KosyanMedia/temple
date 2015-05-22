@@ -1,37 +1,20 @@
 (function(module) {
+  var vparse = require('./parsers/variable');
+
     var lid = 0;
     function new_id() {
       return lid++;
     }
 
-   function split_var(v, pid) {
-      var v = v.replace(/^\s+|\s+$/g, '');
-      var pipe = v.indexOf('|');
-      var dot = v.indexOf('.');
-      var bra = v.indexOf('[');
-      var tor = [v, '', '', pid + '_' + v.replace(/\.|\[|\]/g, '_')];
-      if(pipe != -1) {
-        tor[2] = 'filters.' + v.substr(pipe + 1).replace(/^\s+|\s+$/g, '');
-        v = v.substr(0, pipe).replace(/^\s+|\s+$/g, '');
-        tor[3] = pid + '_' + v.replace(/\.|\[|\]/g, '_');
+    function getter(a, variable) {
+      if (variable.accessor) {
+        a = a + variable.accessor;
       }
-      if(dot != -1 || bra != -1) {
-        if(dot == - 1)
-          dot = 1000;
-        if(bra == - 1)
-          bra = 1000;
-        var ind = Math.min(dot, bra);
-        tor[0] = v.substr(0, ind);
-        tor[1] = v.substr(ind);
-      } else {
-        tor[0] = v;
-        tor[1] = '';
+      var filter;
+      while(filter = variable.filters.shift()) {
+        a = 'filters.' + filter.name + '(' + a + (filter.params || '') + ')';
       }
-      return tor;
-    }
-
-    function getter(n, v) {
-      return v[2] ? v[2] + '(' + n + v[1] + ')' : n + v[1];
+      return a;
     }
 
     module.exports = function(instructions) {//Single-pass translator enchanted with buffered optimizations!
@@ -65,9 +48,9 @@
                 pid = buff[0][1];
   
             if(value_type == 'V') { // Variable
-              var variable = split_var(value, pid);
-              add_variable(variable[0], 'text');
-              var var_id = variable[3] + new_id() + '_text';
+              var variable = vparse(value, pid);
+              add_variable(variable.name, 'text');
+              var var_id = variable.pid + new_id() + '_text';
               declarations.push(var_id + ' = document.createTextNode("")');
               if(buff[0][1] == 'root') {
                 accessors.remove.push(var_id + '.parentNode.removeChild(' + var_id + ');'); 
@@ -75,8 +58,8 @@
               } else {
                 links.push(buff[0][1] + '.appendChild(' + var_id + ');');
               }
-              accessors[variable[0]] = accessors[variable[0]] || [];
-              accessors[variable[0]].push(var_id + '.nodeValue = ' + getter('a', variable));
+              accessors[variable.name] = accessors[variable.name] || [];
+              accessors[variable.name].push(var_id + '.nodeValue = ' + getter('a', variable));
             } else if(value_type == 'C') { // Constant
               if(buff[0][1] == 'root') {
                 var node_var_name = 'root_text' + new_id();
@@ -115,15 +98,15 @@
                 parts.push('"' + esc(value) + '"');
                 const_parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
-                var variable = split_var(value, pid);
-                accessors[variable[0]] = accessors[variable[0]] || [];
-                var var_id = variable[0] + new_id() + '_var';
-                add_variable(variable[0], 'text');
-                access_keys.push(variable[0]);
+                var variable = vparse(value, pid);
+                accessors[variable.name] = accessors[variable.name] || [];
+                var var_id = variable.name + new_id() + '_var';
+                add_variable(variable.name, 'text');
+                access_keys.push(variable.name);
                 if(vars_count > 1) {
                   parts.push(var_id);
                   declarations.push(var_id + ' = ""');
-                  accessors[variable[0]].push(var_id + ' = ' + getter('a', variable));
+                  accessors[variable.name].push(var_id + ' = ' + getter('a', variable));
                 } else {
                   parts.push(getter('a', variable));
                 }
@@ -150,15 +133,15 @@
                 value = buff[0][3][1];
 
             if(value_type == 'V') { // Variable
-              var variable = split_var(value, pid);
-              add_variable(variable[0], 'attr');
-              accessors[variable[0]] = accessors[variable[0]] || [];
+              var variable = vparse(value, pid);
+              add_variable(variable.name, 'attr');
+              accessors[variable.name] = accessors[variable.name] || [];
               if(attr == 'value' || attr == 'checked' || attr == 'id' || attr == 'selected') {
-                accessors[variable[0]].push(pid + '.' + attr + ' = ' + getter('a', variable));
+                accessors[variable.name].push(pid + '.' + attr + ' = ' + getter('a', variable));
               } else if(attr == 'class') {
-                accessors[variable[0]].push(pid + '.' + attr + 'Name = ' + getter('a', variable));
+                accessors[variable.name].push(pid + '.' + attr + 'Name = ' + getter('a', variable));
               } else {
-                accessors[variable[0]].push(pid + '.setAttribute("' + attr + '", ' + getter('a', variable) + ')');
+                accessors[variable.name].push(pid + '.setAttribute("' + attr + '", ' + getter('a', variable) + ')');
               }
             } else if(value_type == 'C') { // Constant
               if(attr == 'value' || attr == 'checked' || attr == 'id') {
@@ -189,15 +172,15 @@
                 parts.push('"' + esc(value) + '"');
                 const_parts.push('"' + esc(value) + '"');
               } else if(value_type == 'V') {
-                var variable = split_var(value, pid);
-                var var_id = variable[0] + new_id() + '_var';
-                access_keys.push(variable[0]);
-                add_variable(variable[0], 'attr');
-                accessors[variable[0]] = accessors[variable[0]] || [];
+                var variable = vparse(value, pid);
+                var var_id = variable.name + new_id() + '_var';
+                access_keys.push(variable.name);
+                add_variable(variable.name, 'attr');
+                accessors[variable.name] = accessors[variable.name] || [];
                 if(vars_count > 1) {
                   parts.push(var_id);
                   declarations.push(var_id + ' = ""');
-                  accessors[variable[0]].push(var_id + ' = ' + getter('a', variable));
+                  accessors[variable.name].push(var_id + ' = ' + getter('a', variable));
                 } else {
                   parts.push(getter('a', variable));
                 }
@@ -246,11 +229,11 @@
             links.push(parent_id + '.appendChild(' + node + ');');
           }
         } else if(instruction == 'if' || instruction == 'forall') {
-          var variable = split_var(ins[2], parent_id), // Accessor key
+          var variable = vparse(ins[2], parent_id), // Accessor key
               tpl = ins[3]; // Template to loop over
           var tpl_id = tpl + new_id();
           declarations.push('child_' + tpl_id + ' = []');
-          add_variable(variable[0], 'key');
+          add_variable(variable.name, 'key');
           declarations.push('after_' + tpl_id + ' = document.createTextNode("")');
           if(parent_id == 'root') {
             root_children.push(parent_id + '.appendChild(after_' + tpl_id + ');');
@@ -259,11 +242,11 @@
           } else {
             links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
           }
-          accessors[variable[0]] = accessors[variable[0]] || [];
+          accessors[variable.name] = accessors[variable.name] || [];
           if(instruction == 'if') {
-            accessors[variable[0]].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
+            accessors[variable.name].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
           } else if(instruction == 'forall') {
-            accessors[variable[0]].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
+            accessors[variable.name].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
           }
         }
       }
