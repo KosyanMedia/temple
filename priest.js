@@ -37,7 +37,7 @@
     var templates_code = [];
     for(var k in templates) {
       if(templates[k].length > 1) //Ignore stop instruction
-        templates_code.push(k + ': function(pool){' + builder(templates[k]) + '}');
+        templates_code.push('"' + k +'"' + ': function(pool){' + builder(templates[k]) + '}');
     }
 
     if(as_module){
