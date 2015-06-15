@@ -64,6 +64,8 @@
           }
 
           emit('stop', new_template_id);
+        } else if(n.tagName == 'include') {
+          emit(n.tagName, template_id, parent_id, n.getAttribute('data'), n.getAttribute('name'));
         } else {
           var node_id = 'n' + new_id();
 
