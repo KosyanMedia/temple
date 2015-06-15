@@ -302,9 +302,7 @@
           accessors_code.push(key + ':function(a){');
         }
 
-        accessors_code.push(accessors[key].join(';'));
-        accessors_code.push('}');
-        accessors_code.push(',');
+        accessors_code.push(accessors[key].join(';'), '}', ',');
       }
 
       accessors_code.pop();
@@ -315,13 +313,11 @@
 
     if (root_children.length == 1) {
       accessors_code.pop();
-      accessors_code.push(',root: function(){return ' + root + ';}');
-      accessors_code.push('}');
+      accessors_code.push(',root: function(){return ' + root + ';}', '}');
     } else {
       root = 'root';
       accessors_code.pop();
-      accessors_code.push(',root: function(){var root = document.createDocumentFragment();' + root_children.join('') + 'return root;}');
-      accessors_code.push('}');
+      accessors_code.push(',root: function(){var root = document.createDocumentFragment();' + root_children.join('') + 'return root;}', '}');
     }
 
     links.push('return ' + accessors_code.join('') + ';');
