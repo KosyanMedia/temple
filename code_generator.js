@@ -230,45 +230,53 @@
         buff = [];
       }
 
-      if (instruction == 'attr' || instruction == 'text') {
-        buff.push(ins);
-      } else if (instruction == 'node') {
-        var node = ins[2];
+      switch (instruction) {
+        case 'attr':
+        case 'text':
+          buff.push(ins);
 
-        declarations.push(node + ' = document.createElement("' + parent_id + '")');
-      } else if (instruction == 'link') {
-        var node = ins[2];
-        if (parent_id == 'root') {
-          root_children.push(parent_id + '.appendChild(' + node + ');');
-          root = node;
-          accessors.remove.push(node + '.parentNode.removeChild(' + node + ');');
-        } else {
-          links.push(parent_id + '.appendChild(' + node + ');');
-        }
-      } else if (instruction == 'if' || instruction == 'forall') {
-        var variable = vparse(ins[2], parent_id); // Accessor key
-        var tpl = ins[3]; // Template to loop over
-        var tpl_id = tpl + new_id();
+          break;
+        case 'node':
+          var node = ins[2];
+          declarations.push(node + ' = document.createElement("' + parent_id + '")');
 
-        declarations.push('child_' + tpl_id + ' = []');
-        add_variable(variable.name, 'key');
-        declarations.push('after_' + tpl_id + ' = document.createTextNode("")');
+          break;
+        case 'link':
+          var node = ins[2];
 
-        if (parent_id == 'root') {
-          root_children.push(parent_id + '.appendChild(after_' + tpl_id + ');');
-          accessors.remove.push('after_' + tpl_id + '.parentNode.removeChild(after_' + tpl_id + ')');
-          accessors.remove.unshift('while(child_' + tpl_id + '.length) pool.release("' + tpl + '", child_' + tpl_id + '.pop());');
-        } else {
-          links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
-        }
+          if (parent_id == 'root') {
+            root_children.push(parent_id + '.appendChild(' + node + ');');
+            root = node;
+            accessors.remove.push(node + '.parentNode.removeChild(' + node + ');');
+          } else {
+            links.push(parent_id + '.appendChild(' + node + ');');
+          }
 
-        accessors[variable.name] = accessors[variable.name] || [];
+          break;
+        case 'if':
+        case 'forall':
+          var variable = vparse(ins[2], parent_id); // Accessor key
+          var tpl = ins[3]; // Template to loop over
+          var tpl_id = tpl + new_id();
+          var method_name = instruction == 'if' ? 'render_child' : 'render_children'
 
-        if (instruction == 'if') {
-          accessors[variable.name].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
-        } else if (instruction == 'forall') {
-          accessors[variable.name].push('temple_utils.render_children(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
-        }
+          declarations.push('child_' + tpl_id + ' = []');
+          add_variable(variable.name, 'key');
+          declarations.push('after_' + tpl_id + ' = document.createTextNode("")');
+
+          if (parent_id == 'root') {
+            root_children.push(parent_id + '.appendChild(after_' + tpl_id + ');');
+            accessors.remove.push('after_' + tpl_id + '.parentNode.removeChild(after_' + tpl_id + ')');
+            accessors.remove.unshift('while(child_' + tpl_id + '.length) pool.release("' + tpl + '", child_' + tpl_id + '.pop());');
+          } else {
+            links.push(parent_id + '.appendChild(after_' + tpl_id + ');');
+          }
+
+          accessors[variable.name] = accessors[variable.name] || [];
+
+          accessors[variable.name].push('temple_utils.' + method_name + '(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ')');
+
+          break;
       }
     }
 
