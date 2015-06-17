@@ -65,6 +65,10 @@
 
           emit('stop', new_template_id);
         } else if(n.tagName == 'include') {
+          var name = n.getAttribute('name');
+          if (!name) {
+            throw new Error('Template «Name» attribute must be specified.');
+          }
           emit(n.tagName, template_id, parent_id, n.getAttribute('key'), n.getAttribute('name'));
         } else {
           var node_id = 'n' + new_id();
