@@ -59,13 +59,13 @@
 
           emit(n.tagName, template_id, parent_id, n.getAttribute('key'), new_template_id);
 
-          for (var i = 0, c = n.childNodes, l = n.childNodes.length; i < l; i++) {
-            node(new_template_id, 'root', c[i], emit);
+          for (var i = 0, child = n.childNodes, l = n.childNodes.length; i < l; i++) {
+            node(new_template_id, 'root', child[i], emit);
           }
 
           emit('stop', new_template_id);
         } else if(n.tagName == 'include') {
-          emit(n.tagName, template_id, parent_id, n.getAttribute('data'), n.getAttribute('name'));
+          emit(n.tagName, template_id, parent_id, n.getAttribute('key'), n.getAttribute('name'));
         } else {
           var node_id = 'n' + new_id();
 
