@@ -93,7 +93,9 @@ Temple templates are valid XML-tree:
 </div>
 ```
 
-Also you can use `forall` instruction for render each item of array:
+#### Loops:
+You can use `forall` instruction for render each item of array:
+
 ```xml
 <ul>
   <forall key="items">
@@ -102,6 +104,7 @@ Also you can use `forall` instruction for render each item of array:
 </ul>
 ```
 
+#### Conditional statements:
 And use `if` for simple conditions:
 ```xml
 <div>
@@ -113,6 +116,14 @@ And use `if` for simple conditions:
   </if>
 </div>
 ```
+
+#### Partial templates:
+Use `include` to include partial template:
+
+```xml
+<include name="foo" key="value"/>
+```
+where `foo` is template name, and `value` is data for rendering;
 
 ### Methods
 
