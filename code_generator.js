@@ -297,10 +297,10 @@
             add_variable(variable.name, 'key');
 
             accessors[variable.name] = accessors[variable.name] || [];
-            accessors[variable.name].push('temple_utils.redned_child(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ');');
+            accessors[variable.name].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", ' + getter('a', variable) + ', pool, child_' + tpl_id + ');');
           } else {
             accessors['update'] = accessors['update'] || [];
-            accessors['update'].push('temple_utils.redned_child(after_' + tpl_id + ', "' + tpl + '", a, pool, child_' + tpl_id + ')');
+            accessors['update'].push('temple_utils.render_child(after_' + tpl_id + ', "' + tpl + '", a, pool, child_' + tpl_id + ')');
           }
 
           break;
