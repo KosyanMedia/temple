@@ -29,55 +29,67 @@
     render_children(after, template, data ? [data] : [], pool, children);
   };
 
-  var pool = function(templates) {
-    var free = {};
+  var templates_cache = {};
+  var templates = {};
 
-    for (var keys = Object.keys(templates), i = keys.length - 1; i >= 0; i--) {
-      free[keys[i]] = [];
-    }
-
-    var methods = {
+  var methods = {
       info: function() {
-        var tor = {free: {}}, fkeys = Object.keys(free);
+          var tor = {
+                  free: {}
+              },
+              fkeys = Object.keys(templates_cache);
 
-        for (var i = 0, l = fkeys.length; i < l; i++) {
-          var k = fkeys[i];
-          tor.free[k] = free[k].length;
-        }
+          for (var i = 0, l = fkeys.length; i < l; i++) {
+              var k = fkeys[i];
+              tor.free[k] = templates_cache[k].length;
+          }
 
-        return tor;
+          return tor;
       },
       release: function(template, instance) {
-        instance.remove();
-        free[template].push(instance);
+          instance.remove();
+          templates_cache[template].push(instance);
       },
       build_cache: function(to_cache) {
-        var keys = Object.keys(to_cache);
+          var keys = Object.keys(to_cache);
 
-        for (var i = 0, l = keys.length; i < l; i++) {
-          var key = keys[i];
-          var arr = free[key];
+          for (var i = 0, l = keys.length; i < l; i++) {
+              var key = keys[i];
+              var arr = templates_cache[key];
 
-          for (var j = 0, k = to_cache[key]; j < k; j++) {
-            arr.push(templates[key](methods));
+              for (var j = 0, k = to_cache[key]; j < k; j++) {
+                  arr.push(templates[key](methods));
+              }
           }
-        }
       },
       g: function(template) {
-        return free[template].pop() || templates[template](methods);
+          return templates_cache[template].pop() || templates[template](methods);
       },
       get: function(template, data) {
-        var  tor = free[template].pop() || templates[template](methods);
+          var tor = templates_cache[template].pop() || templates[template](methods);
 
-        if (data) {
-          tor.update(data);
-        }
+          if (data) {
+              tor.update(data);
+          }
 
-        return [tor.root(), tor];
+          return [tor.root(), tor];
       }
-    };
+  };
 
-    return methods;
+  var pool = function() {
+      for (var i = 0; i < arguments.length; i++) {
+        var component = arguments[i];
+
+        for (var template in component) { if (component.hasOwnProperty(template)) {
+            templates[template] = component[template]
+          }
+        }
+        for (var keys = Object.keys(component), j = keys.length - 1; j >= 0; j--) {
+            templates_cache[keys[j]] = [];
+        }
+      }
+
+      return methods;
   };
 
   var container = typeof module !== "undefined" ? module.exports : (window.temple_utils = {});
