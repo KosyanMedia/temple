@@ -329,6 +329,10 @@
         declarations.push('is_node_removed = false');
       }
 
+      if (accessors['root']) {
+        accessors['root'].unshift('is_node_removed = false;');
+      }
+
       for (var key in accessors) {
         if (key == 'remove' || key == 'root' || key == 'is_removed') {
           accessors_code.push(key + ':function(){');
