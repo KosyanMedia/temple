@@ -8,9 +8,9 @@
 
     for (var i = children.length - 1; i >= 0; i--) {
       if (children[i].is_removed()) {
-        children[i].update(data[i]);
-      } else {
         children.splice(i, 1);
+      } else {
+        children[i].update(data[i]);
       }
     }
 
