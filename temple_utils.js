@@ -10,7 +10,7 @@
       if (children[i].is_removed()) {
         children[i].update(data[i]);
       } else {
-        pool.release(template, children.splice(i, 1)[0]);
+        children.splice(i, 1);
       }
     }
 
