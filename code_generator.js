@@ -321,8 +321,16 @@
         accessors['update'].push('if(undefined !== t) this.' + key + '(t)');
       }
 
+      if (accessors['remove']) {
+        accessors['remove'].push('is_node_removed = true;');
+        accessors['is_removed'] = [
+          'return is_node_removed;'
+        ];
+        declarations.push('is_node_removed = false');
+      }
+
       for (var key in accessors) {
-        if (key == 'remove' || key == 'root') {
+        if (key == 'remove' || key == 'root' || key == 'is_removed') {
           accessors_code.push(key + ':function(){');
         } else {
           accessors_code.push(key + ':function(a){');

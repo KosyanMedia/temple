@@ -7,7 +7,11 @@
     }
 
     for (var i = children.length - 1; i >= 0; i--) {
-      children[i].update(data[i]);
+      if (children[i].is_removed()) {
+        children[i].update(data[i]);
+      } else {
+        pool.release(template, children.splice(i, 1)[0]);
+      }
     }
 
     if (children.length < data.length) {
