@@ -1,7 +1,7 @@
 {
   "name": "temple-wat",
   "description": "Template engine with unique Extra-Virgin-Single-Pass™ compiler technology",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Boris Kaplunovsky",
   "main": "./priest.js",
   "browser": "./temple_utils.js",
