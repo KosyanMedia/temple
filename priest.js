@@ -41,7 +41,7 @@
     }
 
     if(as_module){
-      return ['var temple_utils = require("temple-wat/temple_utils");',
+      return ['var temple_utils = require("temple-wat");',
         'module.exports = {' + templates_code.join(',') + '};'
       ].join("\n");
     } else {
