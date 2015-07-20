@@ -4,9 +4,15 @@
   var node = require('./xml2instructions');
   var builder = require('./code_generator');
 
-  module.exports = function(templates_files, as_module, drop_spaces /*> <*/){
+  module.exports = function(templates_files, as_module, drop_spaces, classes_namespace, no_modify_regex){
     if(!(templates_files instanceof Array)){
       templates_files = [templates_files];
+    }
+    if (typeof classes_namespace !== 'string'){
+      classes_namespace = '';
+    }
+    if(typeof no_modify_regex === 'undefined'){
+      no_modify_regex = /js/;
     }
 
     var parser = new DOMParser();
@@ -37,7 +43,7 @@
     var templates_code = [];
     for(var k in templates) {
       if(templates[k].length > 1) //Ignore stop instruction
-        templates_code.push('"' + k +'"' + ': function(pool){' + builder(templates[k]) + '}');
+        templates_code.push('"' + k +'"' + ': function(pool){' + builder(templates[k], classes_namespace, no_modify_regex) + '}');
     }
 
     if(as_module){

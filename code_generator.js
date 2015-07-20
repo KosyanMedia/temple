@@ -16,11 +16,32 @@
     }
     return a;
   }
+  function esc(s) {
+    return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+  }
 
-  module.exports = function (instructions) {//Single-pass translator enchanted with buffered optimizations!
-    function esc(s) {
-      return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
-    }
+  var add_preffixes = function (parts, namespace, skip_regexp) {
+    return parts.map(function (part) {
+      if (/^"/.test(part)) {//constant
+        return '"' + part.replace(/"/g, '')
+            .split(' ').map(function (class_name) {
+              if (class_name != '') {
+                if (skip_regexp.test(class_name)) {
+                  return class_name;
+                } else {
+                  return namespace + class_name;
+                }
+              } else {
+                return ' ';
+              }
+            }).join(' ') + '"';
+      } else {
+        return '("' + namespace + '" +' + part + ')';
+      }
+    });
+  };
+
+  module.exports = function (instructions, classes_namespace, no_modify_regex) {//Single-pass translator enchanted with buffered optimizations!
 
     var variables = {};
     var root = 'root';
@@ -30,7 +51,7 @@
       }
 
       variables[name].push(type);
-    }
+    };
     var root_children = [];
     var buff = [];
 
@@ -119,7 +140,7 @@
               }
             }
           }
-          text_update_code = node_var_name + '.nodeValue = ' + parts.join('+');
+          var text_update_code = node_var_name + '.nodeValue = ' + parts.join('+');
           while (access_keys.length) {
             var v = access_keys.pop();
 
@@ -148,7 +169,7 @@
             if (attr == 'value' || attr == 'checked' || attr == 'id' || attr == 'selected') {
               accessors[variable.name].push(pid + '.' + attr + ' = ' + getter('a', variable));
             } else if (attr == 'class') {
-              accessors[variable.name].push(pid + '.' + attr + 'Name = ' + getter('a', variable));
+              accessors[variable.name].push(pid + '.' + attr + 'Name = ' + ['"', classes_namespace, '"'].join('')+ ' + ' + getter('a', variable));
             } else {
               accessors[variable.name].push(pid + '.setAttribute("' + attr + '", ' + getter('a', variable) + ')');
             }
@@ -156,7 +177,14 @@
             if (attr == 'value' || attr == 'checked' || attr == 'id') {
               links.unshift(pid + '.' + attr + ' = "' + esc(value) + '";');
             } else if (attr == 'class') {
-              links.unshift(pid + '.className = "' + esc(value) + '";');
+              var static_class_names = value.trim().replace(/\s{2,}/g, ' ').split(' ').map(function (class_name) {
+                if(no_modify_regex.test(class_name)){
+                  return class_name;
+                } else {
+                  return classes_namespace + class_name;
+                }
+              }).join(' ');
+              links.unshift(pid + '.className = "' + esc(static_class_names) + '";');
             } else {
               links.unshift(pid + '.setAttribute("' + attr + '", "' + esc(value) + '");');
             }
@@ -203,8 +231,13 @@
             attr_update_code = node_var_name + '.' + buff[0][2] + ' = ' + parts.join('+');
             attr_set_code = node_var_name + '.' + buff[0][2] + ' = ' + const_parts.join(' + ').replace(/"\+"/g, "");
           } else if (buff[0][2] == 'class') {
-            attr_update_code = node_var_name + '.' + buff[0][2] + 'Name = ' + parts.join('+');
-            attr_set_code = node_var_name + '.' + buff[0][2] + 'Name = ' + const_parts.join('+').replace(/"\+"/g, "");
+
+            var preffixified_parts = add_preffixes(parts, classes_namespace, no_modify_regex);
+
+            attr_update_code = node_var_name + '.className = ' + preffixified_parts.join('+');
+            var preffixified_const_parts = add_preffixes(const_parts, classes_namespace, no_modify_regex);
+
+            attr_set_code = node_var_name + '.className = ' + preffixified_const_parts.join('+').replace(/"\+"/g, "");
           } else {
             attr_update_code = node_var_name + '.setAttribute("' + buff[0][2] + '",' + parts.join('+') + ')';
 
@@ -259,7 +292,7 @@
           var variable = vparse(ins[2], parent_id); // Accessor key
           var tpl = ins[3]; // Template to loop over
           var tpl_id = tpl + new_id();
-          var method_name = instruction == 'forall' ? 'render_children' : 'render_child'
+          var method_name = instruction == 'forall' ? 'render_children' : 'render_child';
 
           declarations.push('child_' + tpl_id + ' = []');
           add_variable(variable.name, 'key');
