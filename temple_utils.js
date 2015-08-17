@@ -14,11 +14,10 @@
       var fragment = document.createDocumentFragment();
 
       for (var lb = children.length, ub = data.length; lb < ub; lb++) {
-        var nested = pool.g(template);
+        var nested = pool.get(template, data[lb]);
 
-        children.push(nested);
-        fragment.appendChild(nested.root());
-        nested.update(data[lb]);
+        children.push(nested[1]);
+        fragment.appendChild(nested[0]);
       }
 
       after.parentNode.insertBefore(fragment, after);
@@ -31,11 +30,13 @@
 
   var templates_cache = {};
   var templates = {};
+  var templates_creation = {};
 
   var methods = {
       info: function() {
           var tor = {
-                  free: {}
+                  free: {},
+                  templates_creation: templates_creation
               },
               fkeys = Object.keys(templates_cache);
 
@@ -62,11 +63,12 @@
               }
           }
       },
-      g: function(template) {
-          return templates_cache[template].pop() || templates[template](methods);
-      },
       get: function(template, data) {
-          var tor = templates_cache[template].pop() || templates[template](methods);
+          var tor = templates_cache[template].pop();
+          if(!tor) {
+            tor = templates[template](methods);
+            templates_creation[template]++;
+          }
 
           if (data) {
               tor.update(data);
@@ -81,7 +83,8 @@
         var component = arguments[i];
 
         for (var template in component) { if (component.hasOwnProperty(template)) {
-            templates[template] = component[template]
+            templates[template] = component[template];
+            templates_creation[template] = 0;
           }
         }
         for (var keys = Object.keys(component), j = keys.length - 1; j >= 0; j--) {
