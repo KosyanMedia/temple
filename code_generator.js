@@ -20,6 +20,12 @@
     return s.replace(/"/g, '\\"').replace(/\n/g, '\\n');
   }
 
+  var svg_elements = [
+    'svg', 'rect', 'circle', 'ellipse', 'line',
+    'polyline', 'polygon', 'path', 'text', 'g', 'use',
+    'defs'
+  ];
+
   var add_preffixes = function (parts, namespace, skip_regexp) {
     return parts.map(function (part) {
       if (/^"/.test(part)) {//constant
@@ -166,15 +172,21 @@
             var variable = vparse(value, pid);
             add_variable(variable.name, 'attr');
             accessors[variable.name] = accessors[variable.name] || [];
-            if (attr == 'value' || attr == 'checked' || attr == 'id' || attr == 'selected') {
+            if (svg_elements.indexOf(parent_id) > -1) {
+              accessors[variable.name].push(pid + '.setAttributeNS(null, "' + attr + '", ' + getter('a', variable) + ')');
+            } else if (attr == 'value' || attr == 'checked' || attr == 'id' || attr == 'selected') {
               accessors[variable.name].push(pid + '.' + attr + ' = ' + getter('a', variable));
             } else if (attr == 'class') {
               accessors[variable.name].push(pid + '.' + attr + 'Name = ' + ['"', classes_namespace, '"'].join('')+ ' + ' + getter('a', variable));
+            } else if (attr == 'xlink:href') {
+              accessors[variable.name].push(pid + '.setAttributeNS("http://www.w3.org/1999/xlink", "href", ' + getter('a', variable) + ')');
             } else {
               accessors[variable.name].push(pid + '.setAttribute("' + attr + '", ' + getter('a', variable) + ')');
             }
           } else if (value_type == 'C') { // Constant
-            if (attr == 'value' || attr == 'checked' || attr == 'id') {
+            if (svg_elements.indexOf(parent_id) > -1) {
+              links.unshift(pid + '.setAttributeNS(null, "' + attr + '", "' + esc(value) + '");');
+            } else if (attr == 'value' || attr == 'checked' || attr == 'id') {
               links.unshift(pid + '.' + attr + ' = "' + esc(value) + '";');
             } else if (attr == 'class') {
               var static_class_names = value.trim().replace(/\s{2,}/g, ' ').split(' ').map(function (class_name) {
@@ -185,6 +197,8 @@
                 }
               }).join(' ');
               links.unshift(pid + '.className = "' + esc(static_class_names) + '";');
+            } else if (attr == 'xlink:href') {
+              links.unshift(pid + '.setAttributeNS("http://www.w3.org/1999/xlink", "href", "' + esc(value) + '");');
             } else {
               links.unshift(pid + '.setAttribute("' + attr + '", "' + esc(value) + '");');
             }
@@ -271,7 +285,11 @@
           break;
         case 'node':
           var node = ins[2];
-          declarations.push(node + ' = document.createElement("' + parent_id + '")');
+          if (svg_elements.indexOf(parent_id) > -1) {
+            declarations.push(node + ' = document.createElementNS("http://www.w3.org/2000/svg", "' + parent_id + '")');
+          } else {
+            declarations.push(node + ' = document.createElement("' + parent_id + '")');
+          }
 
           break;
         case 'link':
