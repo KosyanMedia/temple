@@ -174,7 +174,7 @@
             accessors[variable.name] = accessors[variable.name] || [];
             if (svg_elements.indexOf(parent_id) > -1) {
               accessors[variable.name].push(pid + '.setAttributeNS(null, "' + attr + '", ' + getter('a', variable) + ')');
-            } else if (attr == 'value' || attr == 'checked' || attr == 'id' || attr == 'selected') {
+            } else if (attr == 'value' || attr == 'checked' || attr == 'disabled' || attr == 'id' || attr == 'selected') {
               accessors[variable.name].push(pid + '.' + attr + ' = ' + getter('a', variable));
             } else if (attr == 'class') {
               accessors[variable.name].push(pid + '.' + attr + 'Name = ' + ['"', classes_namespace, '"'].join('')+ ' + ' + getter('a', variable));
@@ -186,7 +186,7 @@
           } else if (value_type == 'C') { // Constant
             if (svg_elements.indexOf(parent_id) > -1) {
               links.unshift(pid + '.setAttributeNS(null, "' + attr + '", "' + esc(value) + '");');
-            } else if (attr == 'value' || attr == 'checked' || attr == 'id') {
+            } else if (attr == 'value' || attr == 'checked' || attr == 'disabled' || attr == 'disabled' || attr == 'id') {
               links.unshift(pid + '.' + attr + ' = "' + esc(value) + '";');
             } else if (attr == 'class') {
               var static_class_names = value.trim().replace(/\s{2,}/g, ' ').split(' ').map(function (class_name) {
@@ -241,7 +241,7 @@
           var attr_update_code;
           var attr_set_code = false;
 
-          if (buff[0][2] == 'value' || buff[0][2] == 'checked' || buff[0][2] == 'id' || buff[0][2] == 'selected') {
+          if (buff[0][2] == 'value' || buff[0][2] == 'checked' || buff[0][2] == 'disabled' || buff[0][2] == 'id' || buff[0][2] == 'selected') {
             attr_update_code = node_var_name + '.' + buff[0][2] + ' = ' + parts.join('+');
             attr_set_code = node_var_name + '.' + buff[0][2] + ' = ' + const_parts.join(' + ').replace(/"\+"/g, "");
           } else if (buff[0][2] == 'class') {
