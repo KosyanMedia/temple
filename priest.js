@@ -31,7 +31,12 @@
     templates_files.forEach(function(val, index, array) {
       var _ = val.split('.');
       _.pop();
-      _ = _.join('.').split('/');
+      _ = _.join('.');
+      if (_.indexOf('/') >= 0) {
+        _ = _.split('/');
+      } else {
+        _ = _.split('\\');
+      }
       var name = _.pop();
       var template_string = fs.readFileSync(val, {encoding: 'utf8'});
       if(drop_spaces) {
